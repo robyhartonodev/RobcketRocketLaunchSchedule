@@ -1,4 +1,4 @@
-package com.example.android.robcket_rocketlaunchschedule;
+package com.example.android.robcket_rocketlaunchschedule.activity;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -9,7 +9,12 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.example.android.robcket_rocketlaunchschedule.R;
+import com.stephentuso.welcome.WelcomeHelper;
+
 public class MainActivity extends AppCompatActivity {
+
+    private WelcomeHelper welcomeHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +31,15 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+
+        welcomeHelper = new WelcomeHelper(this, OnBoardActivity.class);
+        welcomeHelper.show(savedInstanceState);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        welcomeHelper.onSaveInstanceState(outState);
     }
 
     @Override
@@ -45,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
+        }else if(id == R.id.action_tutorial){
+            welcomeHelper.forceShow();
         }
 
         return super.onOptionsItemSelected(item);
