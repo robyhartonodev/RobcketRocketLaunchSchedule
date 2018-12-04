@@ -1,5 +1,6 @@
 package com.example.android.robcket_rocketlaunchschedule.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -8,7 +9,7 @@ public class RocketList {
 
     @SerializedName("rockets")
     @Expose
-    private List<Rocket> rockets = null;
+    private ArrayList<Rocket> rockets = null;
     @SerializedName("total")
     @Expose
     private int total;
@@ -19,11 +20,11 @@ public class RocketList {
     @Expose
     private int offset;
 
-    public List<Rocket> getRockets() {
+    public ArrayList<Rocket> getRockets() {
         return rockets;
     }
 
-    public void setRockets(List<Rocket> rockets) {
+    public void setRockets(ArrayList<Rocket> rockets) {
         this.rockets = rockets;
     }
 

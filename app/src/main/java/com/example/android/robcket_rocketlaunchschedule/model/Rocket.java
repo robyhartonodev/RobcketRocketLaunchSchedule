@@ -1,5 +1,6 @@
 package com.example.android.robcket_rocketlaunchschedule.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.annotations.Expose;
@@ -21,28 +22,28 @@ public class Rocket {
     private String familyname;
     @SerializedName("agencies")
     @Expose
-    private List<Object> agencies = null;
+    private ArrayList<Object> agencies = null;
     @SerializedName("wikiURL")
     @Expose
     private String wikiURL;
     @SerializedName("infoURLs")
     @Expose
-    private List<String> infoURLs = null;
+    private ArrayList<String> infoURLs = null;
     @SerializedName("infoURL")
     @Expose
     private String infoURL;
     @SerializedName("imageSizes")
     @Expose
-    private List<Integer> imageSizes = null;
+    private ArrayList<Integer> imageSizes = null;
     @SerializedName("imageURL")
     @Expose
     private String imageURL;
 
     public Rocket(int id, String name,
                   String configuration, String familyname,
-                  List<Object> agencies, String wikiURL,
-                  List<String> infoURLs, String infoURL,
-                  List<Integer> imageSizes, String imageURL) {
+                  ArrayList<Object> agencies, String wikiURL,
+                  ArrayList<String> infoURLs, String infoURL,
+                  ArrayList<Integer> imageSizes, String imageURL) {
         this.id = id;
         this.name = name;
         this.configuration = configuration;
@@ -87,11 +88,11 @@ public class Rocket {
         this.familyname = familyname;
     }
 
-    public List<Object> getAgencies() {
+    public ArrayList<Object> getAgencies() {
         return agencies;
     }
 
-    public void setAgencies(List<Object> agencies) {
+    public void setAgencies(ArrayList<Object> agencies) {
         this.agencies = agencies;
     }
 
@@ -103,11 +104,11 @@ public class Rocket {
         this.wikiURL = wikiURL;
     }
 
-    public List<String> getInfoURLs() {
+    public ArrayList<String> getInfoURLs() {
         return infoURLs;
     }
 
-    public void setInfoURLs(List<String> infoURLs) {
+    public void setInfoURLs(ArrayList<String> infoURLs) {
         this.infoURLs = infoURLs;
     }
 
@@ -119,11 +120,11 @@ public class Rocket {
         this.infoURL = infoURL;
     }
 
-    public List<Integer> getImageSizes() {
+    public ArrayList<Integer> getImageSizes() {
         return imageSizes;
     }
 
-    public void setImageSizes(List<Integer> imageSizes) {
+    public void setImageSizes(ArrayList<Integer> imageSizes) {
         this.imageSizes = imageSizes;
     }
 
