@@ -50,12 +50,12 @@ public class RocketAdapter extends RecyclerView.Adapter<RocketAdapter.RocketView
         return rocketList.size();
     }
 
-    public class RocketViewHolder extends RecyclerView.ViewHolder {
+    class RocketViewHolder extends RecyclerView.ViewHolder {
 
         TextView txtRocketName;
         ImageView ivRocketImage;
 
-        public RocketViewHolder(@NonNull View itemView) {
+        RocketViewHolder(@NonNull View itemView) {
             super(itemView);
             txtRocketName = itemView.findViewById(R.id.txt_rocket_title);
             ivRocketImage = itemView.findViewById(R.id.rocket_image_view);
