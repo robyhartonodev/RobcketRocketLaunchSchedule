@@ -16,14 +16,15 @@ import com.example.android.robcket_rocketlaunchschedule.activity.MainActivity;
 import com.example.android.robcket_rocketlaunchschedule.model.Rocket;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RocketAdapter extends RecyclerView.Adapter<RocketAdapter.RocketViewHolder> {
 
-    private List<Rocket> rocketList;
+    private ArrayList<Rocket> rocketList;
     private Context mContext;
 
-    public RocketAdapter(Context context, List<Rocket> rocketList) {
+    public RocketAdapter(Context context, ArrayList<Rocket> rocketList) {
         this.rocketList = rocketList;
         this.mContext = context;
     }
