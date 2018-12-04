@@ -38,6 +38,23 @@ public class Rocket {
     @Expose
     private String imageURL;
 
+    public Rocket(int id, String name,
+                  String configuration, String familyname,
+                  List<Object> agencies, String wikiURL,
+                  List<String> infoURLs, String infoURL,
+                  List<Integer> imageSizes, String imageURL) {
+        this.id = id;
+        this.name = name;
+        this.configuration = configuration;
+        this.familyname = familyname;
+        this.agencies = agencies;
+        this.wikiURL = wikiURL;
+        this.infoURLs = infoURLs;
+        this.infoURL = infoURL;
+        this.imageSizes = imageSizes;
+        this.imageURL = imageURL;
+    }
+
     public int getId() {
         return id;
     }
