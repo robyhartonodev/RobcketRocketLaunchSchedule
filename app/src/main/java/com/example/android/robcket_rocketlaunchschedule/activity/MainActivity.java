@@ -13,6 +13,7 @@ import android.view.MenuItem;
 
 import com.example.android.robcket_rocketlaunchschedule.R;
 import com.example.android.robcket_rocketlaunchschedule.adapter.RocketAdapter;
+import com.example.android.robcket_rocketlaunchschedule.helper.DeviceUtils;
 import com.example.android.robcket_rocketlaunchschedule.model.Rocket;
 import com.example.android.robcket_rocketlaunchschedule.model.RocketList;
 import com.example.android.robcket_rocketlaunchschedule.my_interface.GetRocketDataService;
@@ -20,7 +21,6 @@ import com.example.android.robcket_rocketlaunchschedule.network.RetrofitInstance
 import com.stephentuso.welcome.WelcomeHelper;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -106,7 +106,9 @@ public class MainActivity extends AppCompatActivity {
     private void generateRocketList(ArrayList<Rocket> rocketList) {
         recyclerView = findViewById(R.id.recycler_view_notice_list);
         rocketAdapter = new RocketAdapter(this, rocketList);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+
+        // Setup layout manager
+        LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(rocketAdapter);
     }
