@@ -13,7 +13,6 @@ import android.view.MenuItem;
 
 import com.example.android.robcket_rocketlaunchschedule.R;
 import com.example.android.robcket_rocketlaunchschedule.adapter.RocketAdapter;
-import com.example.android.robcket_rocketlaunchschedule.helper.DeviceUtils;
 import com.example.android.robcket_rocketlaunchschedule.model.Rocket;
 import com.example.android.robcket_rocketlaunchschedule.model.RocketList;
 import com.example.android.robcket_rocketlaunchschedule.my_interface.GetRocketDataService;
