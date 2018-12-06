@@ -5,43 +5,39 @@
     android:layout_height="wrap_content"
     card_view:cardCornerRadius="6dp"
     card_view:cardElevation="3dp"
+    card_view:cardPreventCornerOverlap="false"
     card_view:cardUseCompatPadding="true">
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-        android:orientation="vertical"
-        android:padding="5dp">
+        android:orientation="vertical">
 
         <!-- Text Notice Name -->
-        <ImageView
+        <com.joooonho.SelectableRoundedImageView xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/rocket_image_view"
             android:layout_width="match_parent"
-            android:layout_height="128dp"
-            card_view:srcCompat="@mipmap/ic_launcher" />
+            android:layout_height="240dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitXY"
+            android:src="@mipmap/ic_launcher"
+            app:sriv_border_color="#000000"
+            app:sriv_border_width="0dip"
+            app:sriv_left_bottom_corner_radius="0dip"
+            app:sriv_left_top_corner_radius="6dip"
+            app:sriv_oval="false"
+            app:sriv_right_bottom_corner_radius="0dip"
+            app:sriv_right_top_corner_radius="6dip" />
 
         <TextView
             android:id="@+id/txt_rocket_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:padding="3dp"
             android:textStyle="bold" />
 
-        <!-- Text Notice Description -->
-        <TextView
-            android:id="@+id/txt_rocket_something"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="3dp" />
 
-        <!-- Text Notice FilePath -->
-        <TextView
-            android:id="@+id/txt_notice_file_path"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="3dp"
-            android:textSize="12sp" />
 
     </LinearLayout>
 
