@@ -42,8 +42,13 @@ public class RocketAdapter extends RecyclerView.Adapter<RocketAdapter.RocketView
         // Set the Text
         rocketViewHolder.txtRocketName.setText(rocketList.get(position).getName());
 
+
         // Set the ImageView based on String image Url
-        Picasso.with(mContext).load(rocketList.get(position).getImageURL()).into(rocketViewHolder.ivRocketImage);
+        Picasso.with(mContext)
+                .load(rocketList.get(position).getImageURL())
+                .placeholder(R.drawable.ic_placeholder_rocket)
+                .into(rocketViewHolder.ivRocketImage);
+
     }
 
     @Override
