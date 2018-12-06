@@ -21,10 +21,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".activity.OnBoardActivity"
             android:theme="@style/WelcomeScreenTheme" />
+        <activity
+            android:name=".activity.RocketActivity"
+            android:label="@string/title_activity_rocket"
+            android:parentActivityName=".activity.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.android.robcket_rocketlaunchschedule.activity.MainActivity" />
+        </activity>
     </application>
 
 </manifest>
