@@ -10,18 +10,19 @@ public class OnBoardActivity extends WelcomeActivity {
     @Override
     protected WelcomeConfiguration configuration() {
         return new WelcomeConfiguration.Builder(this)
-                .defaultBackgroundColor(R.color.colorPrimary)
+                .defaultBackgroundColor(R.color.secondaryDarkColor)
                 .page(new TitlePage(R.drawable.ic_notification,
                         "Title")
                 )
                 .page(new BasicPage(R.drawable.ic_calendar,
                         "Header",
                         "More text.")
-                        .background(R.color.colorAccent)
+                        .background(R.color.secondaryColor)
                 )
                 .page(new BasicPage(R.drawable.ic_rocket,
                         "Lorem ipsum",
                        "dolor sit amet.")
+                        .background(R.color.secondaryLightColor)
                 )
                 .swipeToDismiss(true)
                 .build();
