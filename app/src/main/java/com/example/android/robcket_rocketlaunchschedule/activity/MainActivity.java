@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
+
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,12 +20,17 @@ import com.example.android.robcket_rocketlaunchschedule.model.Rocket;
 import com.example.android.robcket_rocketlaunchschedule.model.RocketList;
 import com.example.android.robcket_rocketlaunchschedule.my_interface.GetRocketDataService;
 import com.example.android.robcket_rocketlaunchschedule.network.RetrofitInstance;
+import com.mikepenz.fontawesome_typeface_library.FontAwesome;
+import com.mikepenz.materialdrawer.AccountHeader;
+import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
 import com.mikepenz.materialdrawer.model.DividerDrawerItem;
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
+import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
+import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.stephentuso.welcome.WelcomeHelper;
 
 import java.util.ArrayList;
@@ -77,26 +83,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //if you want to update the items at a later time it is recommended to keep it in a variable
-        PrimaryDrawerItem item1 = new PrimaryDrawerItem().withIdentifier(1).withName(R.string.drawer_item_home);
-        SecondaryDrawerItem item2 = new SecondaryDrawerItem().withIdentifier(2).withName(R.string.drawer_item_settings);
+        // Set the Navigation Drawer
+        setNavigationDrawer(toolbar);
 
-        //create the drawer and remember the `Drawer` result object
-        Drawer result = new DrawerBuilder()
-                .withActivity(this)
-                .addDrawerItems(
-                        item1,
-                        new DividerDrawerItem(),
-                        item2
-                )
-                .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
-                    @Override
-                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
-                        // do something with the clicked item :D
-                        return true;
-                    }
-                })
-                .build();
     }
 
 
@@ -141,6 +130,79 @@ public class MainActivity extends AppCompatActivity {
         LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(rocketAdapter);
+    }
+
+    /**
+     * Set the Navigation Drawer
+     *
+     * @param toolbar toolbar of the activity
+     */
+    private void setNavigationDrawer(Toolbar toolbar) {
+        // Create the AccountHeader
+        AccountHeader headerResult = new AccountHeaderBuilder()
+                .withActivity(this)
+                .withHeaderBackground(R.color.secondaryColor)
+                .addProfiles(
+                        new ProfileDrawerItem().withName("Robcket")
+                                .withEmail("Rocket Launcher Schedule App")
+                                .withIcon(getResources().getDrawable(R.drawable.ic_placeholder_rocket))
+                )
+                .withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
+                    @Override
+                    public boolean onProfileChanged(View view, IProfile profile, boolean currentProfile) {
+                        return false;
+                    }
+                })
+                .build();
+
+        //if you want to update the items at a later time it is recommended to keep it in a variable
+        PrimaryDrawerItem itemHome = new PrimaryDrawerItem()
+                .withIdentifier(1)
+                .withName(R.string.drawer_item_home)
+                .withIcon(FontAwesome.Icon.faw_home);
+        PrimaryDrawerItem itemRocket = new PrimaryDrawerItem()
+                .withIdentifier(2)
+                .withName(R.string.drawer_item_rocket)
+                .withIcon(FontAwesome.Icon.faw_space_shuttle);
+        PrimaryDrawerItem itemFilter = new PrimaryDrawerItem()
+                .withIdentifier(3)
+                .withName(R.string.drawer_item_filter)
+                .withIcon(FontAwesome.Icon.faw_filter);
+        SecondaryDrawerItem itemSettings = new SecondaryDrawerItem()
+                .withIdentifier(4)
+                .withName(R.string.drawer_item_settings)
+                .withIcon(FontAwesome.Icon.faw_cogs);
+        SecondaryDrawerItem itemHelp = new SecondaryDrawerItem()
+                .withIdentifier(5)
+                .withName(R.string.drawer_item_help)
+                .withIcon(FontAwesome.Icon.faw_question);
+        SecondaryDrawerItem itemAbout = new SecondaryDrawerItem()
+                .withIdentifier(6)
+                .withName(R.string.drawer_item_about)
+                .withIcon(FontAwesome.Icon.faw_user);
+
+        //create the drawer and remember the `Drawer` result object
+        Drawer result = new DrawerBuilder()
+                .withAccountHeader(headerResult)
+                .withActivity(this)
+                .withToolbar(toolbar)
+                .addDrawerItems(
+                        itemHome,
+                        itemRocket,
+                        itemFilter,
+                        new DividerDrawerItem(),
+                        itemSettings,
+                        itemHelp,
+                        itemAbout
+                )
+                .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
+                    @Override
+                    public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
+                        // do something with the clicked item :D
+                        return true;
+                    }
+                })
+                .build();
     }
 
 }

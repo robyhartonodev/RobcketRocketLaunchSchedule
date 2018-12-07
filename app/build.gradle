@@ -1,5 +1,11 @@
 apply plugin: 'com.android.application'
 
+//wrap with try and catch so the build is working even if the signing stuff is missing
+try {
+    apply from: '../../../signing.gradle'
+} catch (ex) {
+}
+
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -20,10 +26,11 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "com.mikepenz:materialdrawer:6.0.9"
+    implementation "com.mikepenz:materialdrawer:6.1.1"
 
     implementation 'androidx.annotation:annotation:1.0.1'
     implementation 'androidx.appcompat:appcompat:1.1.0-alpha01'
+    implementation "com.android.support:appcompat-v7:28.0.0"
     implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha2'
     implementation 'com.google.android.material:material:1.1.0-alpha01'
     implementation 'androidx.vectordrawable:vectordrawable-animated:1.1.0-alpha01'
@@ -39,9 +46,21 @@ dependencies {
 
     implementation 'com.stephentuso:welcome:1.4.1'
     implementation 'com.joooonho:selectableroundedimageview:1.0.1'
-
+    implementation 'com.mikepenz:google-material-typeface:3.0.1.3.original@aar' //Google Material Icons
+    implementation 'com.mikepenz:fontawesome-typeface:5.3.1.1@aar'              //FontAwesome Icons
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.1.1-alpha01'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1-alpha01'
+}
+
+configurations.all {
+//    resolutionStrategy.force "com.mikepenz:iconics-core:3.1.0"
+//    resolutionStrategy.force "com.mikepenz:fastadapter:3.3.0"
+//    resolutionStrategy.force "com.android.support:support-v4:${versions.androidX}"
+      resolutionStrategy.force "com.android.support:appcompat-v7:28.0.0"
+//    resolutionStrategy.force "com.android.support:cardview-v7:${versions.androidX}"
+//    resolutionStrategy.force "com.android.support:recyclerview-v7:${versions.androidX}"
+//    resolutionStrategy.force "com.android.support:design:${versions.androidX}"
+//    resolutionStrategy.force "com.android.support:support-annotations:${versions.androidX}"
 }
