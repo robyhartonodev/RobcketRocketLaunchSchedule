@@ -10,9 +10,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
 
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.example.android.robcket_rocketlaunchschedule.R;
 import com.example.android.robcket_rocketlaunchschedule.adapter.RocketAdapter;
@@ -33,8 +35,11 @@ import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.stephentuso.welcome.WelcomeHelper;
 
+import org.json.JSONArray;
+
 import java.util.ArrayList;
 
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -44,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private WelcomeHelper welcomeHelper;
     private RocketAdapter rocketAdapter;
     private RecyclerView recyclerView;
+    private SwipeRefreshLayout rocketSwipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,27 +67,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // SwipeRefreshLayout
+        rocketSwipeRefreshLayout = findViewById(R.id.swiperefresh);
+
+        // Set Refresh Listener to rocketSwipeRefreshLayout
+        setRocketSwipeRefreshLayout();
+
         // Welcome / OnBoard Screen Setup
         welcomeHelper = new WelcomeHelper(this, OnBoardActivity.class);
         welcomeHelper.show(savedInstanceState);
 
-        // Create handle for the RetrofitInstance interface
-        GetRocketDataService rocketService = RetrofitInstance.getRetrofitInstance().create(GetRocketDataService.class);
-
-        // Call the method with parameter in the interface to get the notice data
-        Call<RocketList> rocketCall = rocketService.getRocketData();
-
-        rocketCall.enqueue(new Callback<RocketList>() {
-            @Override
-            public void onResponse(Call<RocketList> call, Response<RocketList> response) {
-                generateRocketList(response.body().getRockets());
-            }
-
-            @Override
-            public void onFailure(Call<RocketList> call, Throwable t) {
-
-            }
-        });
+        // Set the Rocket List
+        generateRocketList();
 
         // Set the Navigation Drawer
         setNavigationDrawer(toolbar);
@@ -122,31 +119,63 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Method to generate List of notice using RecyclerView with custom adapter
      */
-    private void generateRocketList(ArrayList<Rocket> rocketList) {
-        recyclerView = findViewById(R.id.recycler_view_notice_list);
-        rocketAdapter = new RocketAdapter(this, rocketList);
+    private void generateRocketList() {
+        // Create handle for the RetrofitInstance interface
+        GetRocketDataService rocketService = RetrofitInstance.getRetrofitInstance().create(GetRocketDataService.class);
 
-        // Setup layout manager
-        LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setAdapter(rocketAdapter);
+        // Call the method with parameter in the interface to get the notice data
+        Call<RocketList> rocketCall = rocketService.getRocketData();
+
+        rocketCall.enqueue(new Callback<RocketList>() {
+            @Override
+            public void onResponse(Call<RocketList> call, Response<RocketList> response) {
+                recyclerView = findViewById(R.id.recycler_view_notice_list);
+                rocketAdapter = new RocketAdapter(MainActivity.this, response.body().getRockets());
+
+                // Setup layout manager
+                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                recyclerView.setLayoutManager(layoutManager);
+                recyclerView.setAdapter(rocketAdapter);
+            }
+
+            @Override
+            public void onFailure(Call<RocketList> call, Throwable t) {
+                ArrayList<Rocket> rocketFailureList = new ArrayList<Rocket>();
+
+                recyclerView = findViewById(R.id.recycler_view_notice_list);
+                rocketAdapter = new RocketAdapter(MainActivity.this, rocketFailureList);
+
+                // Setup layout manager
+                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                recyclerView.setLayoutManager(layoutManager);
+                recyclerView.setAdapter(rocketAdapter);
+
+                // Show Toast
+                Toast.makeText(MainActivity.this,
+                        "Unable to load the list.\nPlease check your connection"
+                        , Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     /**
      * Set the Navigation Drawer
      *
-     * @param toolbar toolbar of the activity
+     * @param toolbar toolbar of the activity in onCreate method
      */
     private void setNavigationDrawer(Toolbar toolbar) {
         // Create the AccountHeader
         AccountHeader headerResult = new AccountHeaderBuilder()
                 .withActivity(this)
                 .withHeaderBackground(R.color.secondaryColor)
+                .withSelectionListEnabledForSingleProfile(false)
+                .withTextColor(getResources().getColor(R.color.material_drawer_dark_primary_text))
                 .addProfiles(
                         new ProfileDrawerItem().withName("Robcket")
                                 .withEmail("Rocket Launcher Schedule App")
-                                .withIcon(getResources().getDrawable(R.drawable.ic_placeholder_rocket))
+                                .withIcon(getResources().getDrawable(R.mipmap.ic_launcher))
                 )
+                .withProfileImagesVisible(false)
                 .withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
                     @Override
                     public boolean onProfileChanged(View view, IProfile profile, boolean currentProfile) {
@@ -205,4 +234,67 @@ public class MainActivity extends AppCompatActivity {
                 .build();
     }
 
+    /**
+     * Sets up a SwipeRefreshLayout.OnRefreshListener and Refresh signal colors that is invoked when the user
+     * performs a swipe-to-refresh gesture.
+     */
+    private void setRocketSwipeRefreshLayout() {
+        rocketSwipeRefreshLayout.setOnRefreshListener(
+                new SwipeRefreshLayout.OnRefreshListener() {
+                    @Override
+                    public void onRefresh() {
+                        // Your code to refresh the list here.
+                        // Make sure you call swipeContainer.setRefreshing(false)
+                        // once the network request has completed successfully.
+                        // Create handle for the RetrofitInstance interface
+                        GetRocketDataService rocketService = RetrofitInstance.getRetrofitInstance().create(GetRocketDataService.class);
+
+                        // Call the method with parameter in the interface to get the notice data
+                        Call<RocketList> rocketCall = rocketService.getRocketData();
+
+                        rocketCall.enqueue(new Callback<RocketList>() {
+                            @Override
+                            public void onResponse(Call<RocketList> call, Response<RocketList> response) {
+                                // Clear the rocketList to avoid duplication, if the rocket list has already populated
+                                rocketAdapter.clear();
+
+                                recyclerView = findViewById(R.id.recycler_view_notice_list);
+                                rocketAdapter = new RocketAdapter(MainActivity.this, response.body().getRockets());
+
+                                // Setup layout manager
+                                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                                recyclerView.setLayoutManager(layoutManager);
+                                recyclerView.setAdapter(rocketAdapter);
+
+                                // Remove the refresh signal after finished
+                                rocketSwipeRefreshLayout.setRefreshing(false);
+
+                            }
+
+                            @Override
+                            public void onFailure(Call<RocketList> call, Throwable t) {
+                                // Clear the rocketList to avoid duplication, if the rocket list has already populated
+                                rocketAdapter.clear();
+
+                                // Setup layout manager
+                                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                                recyclerView.setLayoutManager(layoutManager);
+                                recyclerView.setAdapter(rocketAdapter);
+
+                                // Remove the refresh signal after finished
+                                rocketSwipeRefreshLayout.setRefreshing(false);
+
+                                // Show Toast
+                                Toast.makeText(MainActivity.this,
+                                        "Unable to refresh.\nPlease check your connection.",
+                                        Toast.LENGTH_LONG).show();
+
+                            }
+                        });
+
+                    }
+                }
+        );
+    }
 }
+
