@@ -30,7 +30,7 @@ public class RocketAdapter extends RecyclerView.Adapter<RocketAdapter.RocketView
     @Override
     public RocketAdapter.RocketViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         LayoutInflater layoutInflater = LayoutInflater.from(viewGroup.getContext());
-        View view = layoutInflater.inflate(R.layout.launch_list_item, viewGroup, false);
+        View view = layoutInflater.inflate(R.layout.rocket_list_item, viewGroup, false);
         return new RocketViewHolder(view);
     }
 
@@ -63,5 +63,17 @@ public class RocketAdapter extends RecyclerView.Adapter<RocketAdapter.RocketView
             txtRocketName = itemView.findViewById(R.id.txt_rocket_title);
             ivRocketImage = itemView.findViewById(R.id.rocket_image_view);
         }
+    }
+
+    // Clean all elements of the recycler
+    public void clear() {
+        rocketList.clear();
+        notifyDataSetChanged();
+    }
+
+    // Add a list of items -- change to type used
+    public void addAll(ArrayList<Rocket> list) {
+        rocketList.addAll(list);
+        notifyDataSetChanged();
     }
 }
