@@ -1,5 +1,6 @@
 package com.example.android.robcket_rocketlaunchschedule.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -29,7 +30,7 @@ public class Pad {
     private float longitude;
     @SerializedName("agencies")
     @Expose
-    private List<Object> agencies = null;
+    private ArrayList<Object> agencies = null;
 
     public int getId() {
         return id;
@@ -87,11 +88,11 @@ public class Pad {
         this.longitude = longitude;
     }
 
-    public List<Object> getAgencies() {
+    public ArrayList<Object> getAgencies() {
         return agencies;
     }
 
-    public void setAgencies(List<Object> agencies) {
+    public void setAgencies(ArrayList<Object> agencies) {
         this.agencies = agencies;
     }
 

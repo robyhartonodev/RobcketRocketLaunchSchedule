@@ -3,6 +3,7 @@ package com.example.android.robcket_rocketlaunchschedule.model;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Launch {
@@ -51,13 +52,13 @@ public class Launch {
     private int tbdtime;
     @SerializedName("vidURLs")
     @Expose
-    private List<String> vidURLs = null;
+    private ArrayList<String> vidURLs = null;
     @SerializedName("vidURL")
     @Expose
     private Object vidURL;
     @SerializedName("infoURLs")
     @Expose
-    private List<Object> infoURLs = null;
+    private ArrayList<Object> infoURLs = null;
     @SerializedName("infoURL")
     @Expose
     private Object infoURL;
@@ -87,7 +88,7 @@ public class Launch {
     private Rocket rocket;
     @SerializedName("missions")
     @Expose
-    private List<Mission> missions = null;
+    private ArrayList<Mission> missions = null;
     @SerializedName("lsp")
     @Expose
     private Lsp lsp;
@@ -204,11 +205,11 @@ public class Launch {
         this.tbdtime = tbdtime;
     }
 
-    public List<String> getVidURLs() {
+    public ArrayList<String> getVidURLs() {
         return vidURLs;
     }
 
-    public void setVidURLs(List<String> vidURLs) {
+    public void setVidURLs(ArrayList<String> vidURLs) {
         this.vidURLs = vidURLs;
     }
 
@@ -220,11 +221,11 @@ public class Launch {
         this.vidURL = vidURL;
     }
 
-    public List<Object> getInfoURLs() {
+    public ArrayList<Object> getInfoURLs() {
         return infoURLs;
     }
 
-    public void setInfoURLs(List<Object> infoURLs) {
+    public void setInfoURLs(ArrayList<Object> infoURLs) {
         this.infoURLs = infoURLs;
     }
 
@@ -300,11 +301,11 @@ public class Launch {
         this.rocket = rocket;
     }
 
-    public List<Mission> getMissions() {
+    public ArrayList<Mission> getMissions() {
         return missions;
     }
 
-    public void setMissions(List<Mission> missions) {
+    public void setMissions(ArrayList<Mission> missions) {
         this.missions = missions;
     }
 

@@ -1,5 +1,6 @@
 package com.example.android.robcket_rocketlaunchschedule.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.annotations.Expose;
@@ -27,10 +28,10 @@ public class Mission {
     private String typeName;
     @SerializedName("agencies")
     @Expose
-    private List<Agency> agencies = null;
+    private ArrayList<Agency> agencies = null;
     @SerializedName("payloads")
     @Expose
-    private List<Payload> payloads = null;
+    private ArrayList<Payload> payloads = null;
 
     public int getId() {
         return id;
@@ -80,19 +81,19 @@ public class Mission {
         this.typeName = typeName;
     }
 
-    public List<Agency> getAgencies() {
+    public ArrayList<Agency> getAgencies() {
         return agencies;
     }
 
-    public void setAgencies(List<Agency> agencies) {
+    public void setAgencies(ArrayList<Agency> agencies) {
         this.agencies = agencies;
     }
 
-    public List<Payload> getPayloads() {
+    public ArrayList<Payload> getPayloads() {
         return payloads;
     }
 
-    public void setPayloads(List<Payload> payloads) {
+    public void setPayloads(ArrayList<Payload> payloads) {
         this.payloads = payloads;
     }
 

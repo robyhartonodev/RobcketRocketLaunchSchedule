@@ -1,5 +1,6 @@
 package com.example.android.robcket_rocketlaunchschedule.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -32,7 +33,7 @@ public class Lsp {
     private String changed;
     @SerializedName("infoURLs")
     @Expose
-    private List<String> infoURLs = null;
+    private ArrayList<String> infoURLs = null;
 
     public int getId() {
         return id;
@@ -98,11 +99,11 @@ public class Lsp {
         this.changed = changed;
     }
 
-    public List<String> getInfoURLs() {
+    public ArrayList<String> getInfoURLs() {
         return infoURLs;
     }
 
-    public void setInfoURLs(List<String> infoURLs) {
+    public void setInfoURLs(ArrayList<String> infoURLs) {
         this.infoURLs = infoURLs;
     }
 
