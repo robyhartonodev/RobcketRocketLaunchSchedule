@@ -1,5 +1,6 @@
 package com.example.android.robcket_rocketlaunchschedule.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -228,6 +229,16 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
                         // do something with the clicked item :D
+                        switch (position){
+                            case 1:
+                                Intent homeIntent = new Intent(view.getContext(), MainActivity.class);
+                                startActivity(homeIntent);
+                                break;
+                            case 2:
+                                Intent rocketIntent = new Intent(view.getContext(), RocketActivity.class);
+                                startActivity(rocketIntent);
+                                break;
+                        }
                         return true;
                     }
                 })
@@ -286,7 +297,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 // Show Toast
                                 Toast.makeText(MainActivity.this,
-                                        "Unable to refresh.\nPlease check your connection.",
+                                        "Unable to refresh.\nPlease Check Your Connection.",
                                         Toast.LENGTH_LONG).show();
 
                             }
