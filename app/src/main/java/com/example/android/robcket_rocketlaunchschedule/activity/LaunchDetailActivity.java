@@ -22,6 +22,7 @@ public class LaunchDetailActivity extends AppCompatActivity {
 
     // Variables for Details
     private TextView mLaunchDateTextView;
+    private TextView mLaunchWindowTextView;
 
     // Variables for Missions
     private TextView mLaunchMissionNameTextView;
@@ -33,8 +34,7 @@ public class LaunchDetailActivity extends AppCompatActivity {
     private String MISSION_NAME_EXTRA = "LAUNCH_MISSION_NAME";
     private String MISSION_SUMMARY_EXTRA = "LAUNCH_MISSION_SUMMARY";
     private String LAUNCH_DATE_EXTRA = "LAUNCH_DATE";
-    private String LAUNCH_WINDOW_START_EXTRA = "LAUNCH_WINDOW_START";
-    private String LAUNCH_WINDOW_END_EXTRA = "LAUNCH_WINDOW_END";
+    private String LAUNCH_WINDOW_EXTRA = "LAUNCH_WINDOW";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,8 +95,10 @@ public class LaunchDetailActivity extends AppCompatActivity {
     private void setDetailInformation(){
         // Set Launch Date
         mLaunchDateTextView = findViewById(R.id.textview_date_value);
-        mLaunchDateTextView.setText(getIntent().getStringExtra(LAUNCH_WINDOW_START_EXTRA));
+        mLaunchDateTextView.setText(getIntent().getStringExtra(LAUNCH_DATE_EXTRA));
 
         // Set Launch Window
+        mLaunchWindowTextView = findViewById(R.id.textview_window_value);
+        mLaunchWindowTextView.setText(getIntent().getStringExtra(LAUNCH_WINDOW_EXTRA));
     }
 }

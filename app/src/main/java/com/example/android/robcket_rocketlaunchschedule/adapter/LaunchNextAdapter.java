@@ -7,17 +7,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.android.robcket_rocketlaunchschedule.R;
 import com.example.android.robcket_rocketlaunchschedule.activity.LaunchDetailActivity;
 import com.example.android.robcket_rocketlaunchschedule.model.Launch;
-import com.example.android.robcket_rocketlaunchschedule.model.LaunchNextList;
-import com.example.android.robcket_rocketlaunchschedule.model.Location;
-import com.example.android.robcket_rocketlaunchschedule.model.Rocket;
 import com.squareup.picasso.Picasso;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,7 +20,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.LaunchNextViewHolder> {
@@ -36,8 +30,7 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
     private String MISSION_NAME_EXTRA = "LAUNCH_MISSION_NAME";
     private String MISSION_SUMMARY_EXTRA = "LAUNCH_MISSION_SUMMARY";
     private String LAUNCH_DATE_EXTRA = "LAUNCH_DATE";
-    private String LAUNCH_WINDOW_START_EXTRA = "LAUNCH_WINDOW_START";
-    private String LAUNCH_WINDOW_END_EXTRA = "LAUNCH_WINDOW_END";
+    private String LAUNCH_WINDOW_EXTRA = "LAUNCH_WINDOW";
 
     // Private Variables for constructors
     private ArrayList<Launch> launchList;
@@ -108,7 +101,12 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
 
             // Launch Date
             String currentLaunchDate = launchList.get(getAdapterPosition()).getWindowstart();
-            String currentLaunchDateLocal = getDate(currentLaunchDate);
+            String currentLaunchDateLocal = getLocalDate(currentLaunchDate);
+
+            // Launch Window
+            String currentLaunchStartWindow = launchList.get(getAdapterPosition()).getWindowstart();
+            String currentLaunchEndWindow = launchList.get(getAdapterPosition()).getWindowend();
+            String currentLaunchWindow = getLocalTimeWindow(currentLaunchStartWindow, currentLaunchEndWindow);
 
             // Mission Name
             String currentMissionName = launchList.get(getAdapterPosition()).getMissions().get(0).getName();
@@ -125,7 +123,8 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
             detailLaunchIntent.putExtra(ROCKET_IMAGE_EXTRA, currentRocketImageUrl);
             detailLaunchIntent.putExtra(MISSION_NAME_EXTRA, currentMissionName);
             detailLaunchIntent.putExtra(MISSION_SUMMARY_EXTRA, currentMissionSummary);
-            detailLaunchIntent.putExtra(LAUNCH_WINDOW_START_EXTRA,currentLaunchDateLocal);
+            detailLaunchIntent.putExtra(LAUNCH_DATE_EXTRA,currentLaunchDateLocal);
+            detailLaunchIntent.putExtra(LAUNCH_WINDOW_EXTRA,currentLaunchWindow);
 
             mContext.startActivity(detailLaunchIntent);
         }
@@ -142,7 +141,7 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
      * @param ourDate String of json time response, example: December 13, 2018 04:00:00 UTC
      * @return String of local time , example: December 13, 2018 10:00:00 CEST (If device in Germany)
      */
-    private String getDate(String ourDate)
+    private String getLocalDate(String ourDate)
     {
         // Example Date String Response: "December 13, 2018 04:00:00 UTC"
         try
@@ -163,5 +162,51 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
         }
         return ourDate;
     }
+
+    /**
+     * This method parses JSON Time Response to Window Time
+     * @param startDate String of json time response for start of launch,
+     *                  example: December 13, 2018 04:00:00 UTC
+     * @param endDate String of json time response for end of launch,
+     *                example: December 13, 2018 04:00:00 UTC
+     * @return String of window time , example: 10:00:00 - 16:00:00 CEST
+     */
+    private String getLocalTimeWindow(String startDate, String endDate)
+    {
+        // String for time window of launch
+        String windowTime;
+
+        // Example Date String Response: "December 13, 2018 04:00:00 UTC"
+        try
+        {
+            // Start Date
+            SimpleDateFormat formatter = new SimpleDateFormat("MMM d, yyyy HH:mm:ss z",Locale.ENGLISH);
+            formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date valueDateStart = formatter.parse(startDate);
+
+            SimpleDateFormat timeStartFormatter = new SimpleDateFormat("HH:mm",Locale.ENGLISH); //this format changeable
+            timeStartFormatter.setTimeZone(TimeZone.getDefault());
+            startDate = timeStartFormatter.format(valueDateStart);
+
+            // End Date
+            Date valueDateEnd = formatter.parse(endDate);
+
+            SimpleDateFormat timeEndFormatter = new SimpleDateFormat("HH:mm z",Locale.ENGLISH); //this format changeable
+            timeEndFormatter.setTimeZone(TimeZone.getDefault());
+            endDate = timeEndFormatter.format(valueDateEnd);
+
+            // Set the window time string
+            windowTime = String.format("%s - %s", startDate, endDate);
+
+            //Log.d("ourDate", ourDate);
+        }
+        catch (Exception e)
+        {
+            windowTime = "00-00-0000 00:00";
+        }
+        return windowTime;
+    }
+
+
 
 }
