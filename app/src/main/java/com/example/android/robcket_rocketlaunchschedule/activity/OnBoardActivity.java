@@ -19,7 +19,7 @@ public class OnBoardActivity extends WelcomeActivity {
                         "More text.")
                         .background(R.color.secondaryColor)
                 )
-                .page(new BasicPage(R.drawable.ic_rocket,
+                .page(new BasicPage(R.drawable.ic_rocket_onboard,
                         "Lorem ipsum",
                        "dolor sit amet.")
                         .background(R.color.secondaryLightColor)

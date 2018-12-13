@@ -4,6 +4,7 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,7 +44,7 @@ public class RocketAdapter extends RecyclerView.Adapter<RocketAdapter.RocketView
         // Set the ImageView based on String image Url
         Picasso.with(mContext)
                 .load(rocketList.get(position).getImageURL())
-                .placeholder(R.drawable.ic_placeholder_rocket)
+                .placeholder(R.drawable.ic_rocket)
                 .into(rocketViewHolder.ivRocketImage);
 
     }
@@ -71,9 +72,4 @@ public class RocketAdapter extends RecyclerView.Adapter<RocketAdapter.RocketView
         notifyDataSetChanged();
     }
 
-    // Add a list of items -- change to type used
-    public void addAll(ArrayList<Rocket> list) {
-        rocketList.addAll(list);
-        notifyDataSetChanged();
-    }
 }
