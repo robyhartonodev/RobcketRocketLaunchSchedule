@@ -15,9 +15,21 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <TextView
+            android:id="@+id/txt_launch_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/secondaryDarkColor"
+            android:gravity="center"
+            android:padding="3dp"
+            android:textColor="@color/material_drawer_dark_primary_text"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:fontFamily="@font/open_sans" />
+
         <!-- Text Notice Name -->
         <com.joooonho.SelectableRoundedImageView xmlns:app="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/rocket_image_view"
+            android:id="@+id/launch_rocket_image_view"
             android:layout_width="match_parent"
             android:layout_height="240dp"
             android:adjustViewBounds="true"
@@ -26,20 +38,50 @@
             app:sriv_border_color="#000000"
             app:sriv_border_width="0dip"
             app:sriv_left_bottom_corner_radius="0dip"
-            app:sriv_left_top_corner_radius="6dip"
+            app:sriv_left_top_corner_radius="0dip"
             app:sriv_oval="false"
             app:sriv_right_bottom_corner_radius="0dip"
-            app:sriv_right_top_corner_radius="6dip" />
+            app:sriv_right_top_corner_radius="0dip" />
 
         <TextView
-            android:id="@+id/txt_rocket_title"
+            android:id="@+id/txt_launch_date_label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/secondaryDarkColor"
             android:gravity="center"
             android:padding="3dp"
-            android:textColor="@color/material_drawer_dark_primary_text"
-            android:textSize="20sp"
+            android:text="Date: "
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:fontFamily="@font/open_sans" />
+
+        <TextView
+            android:id="@+id/txt_launch_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="3dp"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:fontFamily="@font/open_sans" />
+
+        <TextView
+            android:id="@+id/txt_launch_location_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="3dp"
+            android:text="Location:"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:fontFamily="@font/open_sans" />
+
+        <TextView
+            android:id="@+id/txt_launch_location"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="3dp"
+            android:textSize="16sp"
             android:textStyle="bold"
             app:fontFamily="@font/open_sans" />
 
