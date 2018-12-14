@@ -37,6 +37,9 @@ public class LaunchDetailActivity extends AppCompatActivity {
     // Variables for Rocket
     private TextView mLaunchRocketNameTextView;
 
+    // Variables for Pad
+    private TextView mLaunchPadNameTextView;
+
     // Variables for putExtra Intents
     private String ROCKET_IMAGE_EXTRA = "LAUNCH_IMAGE_URL";
     private String LAUNCH_TITLE_EXTRA = "LAUNCH_TITLE";
@@ -46,6 +49,8 @@ public class LaunchDetailActivity extends AppCompatActivity {
     private String LAUNCH_WINDOW_EXTRA = "LAUNCH_WINDOW";
     private String ROCKET_NAME_EXTRA  = "LAUNCH_ROCKET_NAME";
     private String ROCKET_WIKI_URL_EXTRA = "LAUNCH_ROCKET_WIKI_URL";
+    private String PAD_NAME_EXTRA = "LAUNCH_PAD";
+    private String PAD_MAP_URL_EXTRA = "LAUNCH_PAD_MAP_URL";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,9 +58,6 @@ public class LaunchDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_launch_detail);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        // Set ViewPager
-        // setViewPager();
 
         // Display back button on toolbar
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -88,6 +90,9 @@ public class LaunchDetailActivity extends AppCompatActivity {
 
         // Set Rocket CardView information
         setRocketInformation();
+
+        // Set Pad CardView information
+        setPadInformation();
     }
 
     /**
@@ -131,7 +136,7 @@ public class LaunchDetailActivity extends AppCompatActivity {
         String rocketNameWikiUrl = getIntent().getStringExtra(ROCKET_WIKI_URL_EXTRA);
 
         // Create HyperLink Text
-        String rocketNameHyperLinkText = String.format("<a href='%s' style='text-decoration:none'> %s </a>", rocketNameWikiUrl, rocketName);
+        String rocketNameHyperLinkText = String.format("<a href='%s'> %s </a>", rocketNameWikiUrl, rocketName);
 
         // Set Rocket Name
         mLaunchRocketNameTextView.setText(Html.fromHtml(rocketNameHyperLinkText));
@@ -139,6 +144,30 @@ public class LaunchDetailActivity extends AppCompatActivity {
         // Remove Underline from textview
         stripUnderlines(mLaunchRocketNameTextView);
 
+    }
+
+    /**
+     * This method sets all information in Pad CardView
+     */
+    private void setPadInformation(){
+        // Set Pad Name
+        mLaunchPadNameTextView = findViewById(R.id.textview_launch_pad);
+
+        // Set HyperLink to Rocket Name TextView
+        mLaunchPadNameTextView.setMovementMethod(LinkMovementMethod.getInstance());
+
+        // Set Rocket Name and Rocket Map Url with value in Intent Extra
+        String padName = getIntent().getStringExtra(PAD_NAME_EXTRA);
+        String padMapUrl = getIntent().getStringExtra(PAD_MAP_URL_EXTRA);
+
+        // Create HyperLinkText
+        String padNameHyperLinkText = String.format("<a href='%s'> %s </a>", padMapUrl, padName);
+
+        // Set Pad Name
+        mLaunchPadNameTextView.setText(Html.fromHtml(padNameHyperLinkText));
+
+        // Remove Underline from textview
+        stripUnderlines(mLaunchPadNameTextView);
     }
 
     /**

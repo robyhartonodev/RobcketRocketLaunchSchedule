@@ -33,6 +33,8 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
     private String LAUNCH_WINDOW_EXTRA = "LAUNCH_WINDOW";
     private String ROCKET_NAME_EXTRA  = "LAUNCH_ROCKET_NAME";
     private String ROCKET_WIKI_URL_EXTRA = "LAUNCH_ROCKET_WIKI_URL";
+    private String PAD_NAME_EXTRA = "LAUNCH_PAD";
+    private String PAD_MAP_URL_EXTRA = "LAUNCH_PAD_MAP_URL";
 
     // Private Variables for constructors
     private ArrayList<Launch> launchList;
@@ -111,18 +113,22 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
             String currentLaunchWindow = getLocalTimeWindow(currentLaunchStartWindow, currentLaunchEndWindow);
 
             // Mission Name / Type
-            String currentMissionName = launchList.get(getAdapterPosition()).getMissions().get(0).getTypeName();
+            String currentMissionName = launchList.get(getAdapterPosition()).getMissions().get(0).getName();
 
             // Mission Summary
             String currentMissionSummary = launchList.get(getAdapterPosition()).getMissions().get(0).getDescription();
-
-            //TODO putExtra Mission, Agency details
 
             // Rocket Name
             String currentRocketName = launchList.get(getAdapterPosition()).getRocket().getName();
 
             // Rocket Wiki Url
             String currentRocketWikiUrl = launchList.get(getAdapterPosition()).getRocket().getWikiURL();
+
+            // Pad Name
+            String currentPadName = launchList.get(getAdapterPosition()).getLocation().getPads().get(0).getName();
+
+            // Pad Google Map Url
+            String currentPadMapUrl = launchList.get(getAdapterPosition()).getLocation().getPads().get(0).getMapURL();
 
             Intent detailLaunchIntent = new Intent(mContext, LaunchDetailActivity.class);
 
@@ -135,6 +141,8 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
             detailLaunchIntent.putExtra(LAUNCH_WINDOW_EXTRA,currentLaunchWindow);
             detailLaunchIntent.putExtra(ROCKET_NAME_EXTRA, currentRocketName);
             detailLaunchIntent.putExtra(ROCKET_WIKI_URL_EXTRA, currentRocketWikiUrl);
+            detailLaunchIntent.putExtra(PAD_NAME_EXTRA, currentPadName);
+            detailLaunchIntent.putExtra(PAD_MAP_URL_EXTRA, currentPadMapUrl);
 
             mContext.startActivity(detailLaunchIntent);
         }

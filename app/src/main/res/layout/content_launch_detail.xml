@@ -181,6 +181,16 @@
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
+                <TextView
+                    android:id="@+id/textview_launch_pad"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:linksClickable="true"
+                    android:text="Pad Name"
+                    android:textColorLink="@color/secondaryColor"
+                    android:textSize="16sp" />
+
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
