@@ -44,7 +44,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="Launch Date" />
+                    android:text="Launch Date"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/textview_date_value"
@@ -59,7 +60,8 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:gravity="center"
-                    android:text="Launch Window" />
+                    android:text="Launch Window"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/textview_window_value"
@@ -141,6 +143,16 @@
                     android:text="Rocket"
                     android:textSize="20sp"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/textview_launch_rocket_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:linksClickable="true"
+                    android:text="Rocket Name"
+                    android:textColorLink="@color/secondaryColor"
+                    android:textSize="16sp" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
