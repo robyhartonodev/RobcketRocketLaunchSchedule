@@ -4,38 +4,41 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="16dp"
+    android:layout_margin="8dp"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".activity.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <!--<TextView
+    <TextView
         android:id="@+id/textview_next_launch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="false"
         android:background="@color/secondaryLightColor"
         android:gravity="center"
-        android:text="NEXT LAUNCH"
+        android:text="NEXT ROCKET LAUNCH"
+        android:textColor="@color/material_drawer_dark_primary_text"
+        android:textSize="14sp"
+        android:textStyle="bold"
         app:fontFamily="@font/open_sans" />
 
     <TextView
         android:id="@+id/textview_next_launch_timer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textview_next_launch"
-        android:layout_centerInParent="false"
-        android:layout_centerHorizontal="false"
+        android:layout_below="@id/textview_next_launch"
         android:background="@color/secondaryLightColor"
         android:gravity="center"
-        android:text="00 DAYS 00 HOURS 00 MINUTES 00 SECONDS"
-        android:textSize="14sp"
-        app:fontFamily="@font/open_sans" />-->
+        android:text="00 D 00 H 00 M 00 S"
+        android:textColor="@color/material_drawer_dark_primary_text"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        app:fontFamily="@font/open_sans" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swiperefresh"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_below="@id/textview_next_launch_timer">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view_notice_list"

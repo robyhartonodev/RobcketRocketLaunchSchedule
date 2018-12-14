@@ -15,9 +15,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
 
+import android.os.CountDownTimer;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.robcket_rocketlaunchschedule.R;
@@ -35,7 +37,13 @@ import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.stephentuso.welcome.WelcomeHelper;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import retrofit2.Call;
@@ -48,6 +56,9 @@ public class MainActivity extends AppCompatActivity {
     private LaunchNextAdapter launchNextAdapter;
     private RecyclerView recyclerView;
     private SwipeRefreshLayout launchSwipeRefreshLayout;
+    private TextView nextLaunchTimerTextView;
+
+    private String nextLaunchTimerString;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +76,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Set Next Launch Timer TextView
+        nextLaunchTimerTextView = findViewById(R.id.textview_next_launch_timer);
+
         // SwipeRefreshLayout
         launchSwipeRefreshLayout = findViewById(R.id.swiperefresh);
 
@@ -80,6 +94,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Set the Navigation Drawer
         setNavigationDrawer(toolbar);
+
+        // Set the Countdown Timer
+        // setCountDownTimer();
 
     }
 
@@ -127,6 +144,12 @@ public class MainActivity extends AppCompatActivity {
         launchNextCall.enqueue(new Callback<LaunchNextList>() {
             @Override
             public void onResponse(Call<LaunchNextList> call, Response<LaunchNextList> response) {
+                // Set next launch string variable with the next launch time from json response
+                nextLaunchTimerString = response.body().getLaunches().get(0).getWindowstart();
+
+                // Set the Countdown Timer
+                setCountDownTimer();
+
                 recyclerView = findViewById(R.id.recycler_view_notice_list);
                 launchNextAdapter = new LaunchNextAdapter(MainActivity.this, response.body().getLaunches());
 
@@ -226,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
                         // do something with the clicked item :D
-                        switch (position){
+                        switch (position) {
                             case 1:
                                 Intent homeIntent = new Intent(view.getContext(), MainActivity.class);
                                 startActivity(homeIntent);
@@ -255,7 +278,6 @@ public class MainActivity extends AppCompatActivity {
                         // Make sure you call swipeContainer.setRefreshing(false)
                         // once the network request has completed successfully.
                         // Create handle for the RetrofitInstance interface
-                        // Create handle for the RetrofitInstance interface
                         GetLaunchDataService launchNextService = RetrofitInstance.getRetrofitInstance().create(GetLaunchDataService.class);
 
                         // Call the method with parameter in the interface to get the notice data
@@ -266,6 +288,12 @@ public class MainActivity extends AppCompatActivity {
                             public void onResponse(Call<LaunchNextList> call, Response<LaunchNextList> response) {
                                 // Clear the rocketList to avoid duplication, if the rocket list has already populated
                                 launchNextAdapter.clear();
+
+                                // Set next launch string variable with the next launch time from json response
+                                nextLaunchTimerString = response.body().getLaunches().get(0).getWindowstart();
+
+                                // Set the Countdown Timer
+                                setCountDownTimer();
 
                                 recyclerView = findViewById(R.id.recycler_view_notice_list);
                                 launchNextAdapter = new LaunchNextAdapter(MainActivity.this, response.body().getLaunches());
@@ -312,6 +340,70 @@ public class MainActivity extends AppCompatActivity {
                 getResources().getColor(R.color.secondaryLightColor)
         );
 
+    }
+
+    /**
+     * This method sets the countdown timer for the launch
+     */
+    private void setCountDownTimer() {
+        // Get the Date of next Launch
+        Date nextLaunchTime = convertJSONStringToDate(nextLaunchTimerString);
+
+        // Get the current time
+        Date currentTime = Calendar.getInstance().getTime();
+
+        // Get the difference between current time and next launch time
+        long diffInMs = nextLaunchTime.getTime() - currentTime.getTime();
+
+        // Debug Toast show difference
+        // Toast.makeText(MainActivity.this, String.valueOf(diffInMs), Toast.LENGTH_LONG).show();
+
+        //1000 = 1 second interval
+        CountDownTimer cdt = new CountDownTimer(diffInMs, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                long days = TimeUnit.MILLISECONDS.toDays(millisUntilFinished);
+                millisUntilFinished -= TimeUnit.DAYS.toMillis(days);
+
+                long hours = TimeUnit.MILLISECONDS.toHours(millisUntilFinished);
+                millisUntilFinished -= TimeUnit.HOURS.toMillis(hours);
+
+                long minutes = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished);
+                millisUntilFinished -= TimeUnit.MINUTES.toMillis(minutes);
+
+                long seconds = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished);
+
+                nextLaunchTimerTextView.setText(days + "D " + hours + "H " + minutes + "M " + seconds +"S "); //You can compute the millisUntilFinished on hours/minutes/seconds
+            }
+
+            @Override
+            public void onFinish() {
+                nextLaunchTimerTextView.setText("LAUNCH IS ON");
+            }
+        };
+        // Start Timer
+        cdt.start();
+    }
+
+    /**
+     * This method convert JSON Time Response to Date
+     *
+     * @param ourDate String of json time response, example: December 13, 2018 04:00:00 UTC
+     * @return Date type object of converted json string time response
+     */
+    private Date convertJSONStringToDate(String ourDate) {
+        Date dateResult;
+        // Example Date String Response: "December 13, 2018 04:00:00 UTC"
+        try {
+            SimpleDateFormat formatter = new SimpleDateFormat("MMM d, yyyy HH:mm:ss z", Locale.ENGLISH);
+            formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+            dateResult = formatter.parse(ourDate);
+
+            //Log.d("ourDate", ourDate);
+        } catch (Exception e) {
+            dateResult = Calendar.getInstance().getTime();
+        }
+        return dateResult;
     }
 
 }
