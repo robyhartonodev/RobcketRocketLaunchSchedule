@@ -40,6 +40,9 @@ public class LaunchDetailActivity extends AppCompatActivity {
     // Variables for Pad
     private TextView mLaunchPadNameTextView;
 
+    // Variables for Agency
+    private TextView mLaunchAgencyNameTextView;
+
     // Variables for putExtra Intents
     private String ROCKET_IMAGE_EXTRA = "LAUNCH_IMAGE_URL";
     private String LAUNCH_TITLE_EXTRA = "LAUNCH_TITLE";
@@ -47,10 +50,12 @@ public class LaunchDetailActivity extends AppCompatActivity {
     private String MISSION_SUMMARY_EXTRA = "LAUNCH_MISSION_SUMMARY";
     private String LAUNCH_DATE_EXTRA = "LAUNCH_DATE";
     private String LAUNCH_WINDOW_EXTRA = "LAUNCH_WINDOW";
-    private String ROCKET_NAME_EXTRA  = "LAUNCH_ROCKET_NAME";
+    private String ROCKET_NAME_EXTRA = "LAUNCH_ROCKET_NAME";
     private String ROCKET_WIKI_URL_EXTRA = "LAUNCH_ROCKET_WIKI_URL";
     private String PAD_NAME_EXTRA = "LAUNCH_PAD";
     private String PAD_MAP_URL_EXTRA = "LAUNCH_PAD_MAP_URL";
+    private String AGENCY_NAME_EXTRA = "LAUNCH_AGENCY_NAME";
+    private String AGENCY_WIKI_URL_EXTRA = "LAUNCH_AGENCY_WIKI_URL";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,12 +98,15 @@ public class LaunchDetailActivity extends AppCompatActivity {
 
         // Set Pad CardView information
         setPadInformation();
+
+        // Set Agency CardView information
+        setAgencyInformation();
     }
 
     /**
      * This Method sets all information in Mission CardView
      */
-    private void setMissionInformation(){
+    private void setMissionInformation() {
         // Set Mission Title
         mLaunchMissionNameTextView = findViewById(R.id.textview_launch_mission_name);
         mLaunchMissionNameTextView.setText(getIntent().getStringExtra(MISSION_NAME_EXTRA));
@@ -111,7 +119,7 @@ public class LaunchDetailActivity extends AppCompatActivity {
     /**
      * This method sets all information in Details CardView
      */
-    private void setDetailInformation(){
+    private void setDetailInformation() {
         // Set Launch Date
         mLaunchDateTextView = findViewById(R.id.textview_date_value);
         mLaunchDateTextView.setText(getIntent().getStringExtra(LAUNCH_DATE_EXTRA));
@@ -124,7 +132,7 @@ public class LaunchDetailActivity extends AppCompatActivity {
     /**
      * This method sets all information in Rocket CardView
      */
-    private void setRocketInformation(){
+    private void setRocketInformation() {
         // Set Rocket Name
         mLaunchRocketNameTextView = findViewById(R.id.textview_launch_rocket_name);
 
@@ -149,7 +157,7 @@ public class LaunchDetailActivity extends AppCompatActivity {
     /**
      * This method sets all information in Pad CardView
      */
-    private void setPadInformation(){
+    private void setPadInformation() {
         // Set Pad Name
         mLaunchPadNameTextView = findViewById(R.id.textview_launch_pad);
 
@@ -171,13 +179,38 @@ public class LaunchDetailActivity extends AppCompatActivity {
     }
 
     /**
-     * This method removes underline on TextView Hyperlink
+     * This method sets all information in Agency CardView
+     */
+    private void setAgencyInformation() {
+        // Set Agency Name
+        mLaunchAgencyNameTextView = findViewById(R.id.textview_launch_agency);
+
+        // Set HyperLink to Agency Name TextView
+        mLaunchAgencyNameTextView.setMovementMethod(LinkMovementMethod.getInstance());
+
+        // Set Agency Name and Agency WikiUrl with value in Intent Extra
+        String agencyName = getIntent().getStringExtra(AGENCY_NAME_EXTRA);
+        String agencyWikiUrl = getIntent().getStringExtra(AGENCY_WIKI_URL_EXTRA);
+
+        // Create HyperLinkText
+        String agencyNameHyperLinkText = String.format("<a href='%s'> %s </a>", agencyWikiUrl, agencyName);
+
+        // Set Agency Name
+        mLaunchAgencyNameTextView.setText(Html.fromHtml(agencyNameHyperLinkText));
+
+        // Remove Underline from textview
+        stripUnderlines(mLaunchAgencyNameTextView);
+    }
+
+    /**
+     * This method removes underline on TextView Hyperlink and set it in TextView
+     *
      * @param textView
      */
     private void stripUnderlines(TextView textView) {
         Spannable s = new SpannableString(textView.getText());
         URLSpan[] spans = s.getSpans(0, s.length(), URLSpan.class);
-        for (URLSpan span: spans) {
+        for (URLSpan span : spans) {
             int start = s.getSpanStart(span);
             int end = s.getSpanEnd(span);
             s.removeSpan(span);

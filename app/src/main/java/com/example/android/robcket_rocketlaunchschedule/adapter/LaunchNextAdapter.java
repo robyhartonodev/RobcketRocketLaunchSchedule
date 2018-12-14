@@ -35,6 +35,8 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
     private String ROCKET_WIKI_URL_EXTRA = "LAUNCH_ROCKET_WIKI_URL";
     private String PAD_NAME_EXTRA = "LAUNCH_PAD";
     private String PAD_MAP_URL_EXTRA = "LAUNCH_PAD_MAP_URL";
+    private String AGENCY_NAME_EXTRA = "LAUNCH_AGENCY_NAME";
+    private String AGENCY_WIKI_URL_EXTRA = "LAUNCH_AGENCY_WIKI_URL";
 
     // Private Variables for constructors
     private ArrayList<Launch> launchList;
@@ -130,6 +132,12 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
             // Pad Google Map Url
             String currentPadMapUrl = launchList.get(getAdapterPosition()).getLocation().getPads().get(0).getMapURL();
 
+            // Agency (Launch Service Provider) Name
+            String currentAgencyName = launchList.get(getAdapterPosition()).getLsp().getName();
+
+            // Agency (Launch Service Provider) Url
+            String currentAgencyUrl = launchList.get(getAdapterPosition()).getLsp().getWikiURL();
+
             Intent detailLaunchIntent = new Intent(mContext, LaunchDetailActivity.class);
 
             // PutExtra all information for LaunchDetailActivity.class
@@ -143,6 +151,8 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
             detailLaunchIntent.putExtra(ROCKET_WIKI_URL_EXTRA, currentRocketWikiUrl);
             detailLaunchIntent.putExtra(PAD_NAME_EXTRA, currentPadName);
             detailLaunchIntent.putExtra(PAD_MAP_URL_EXTRA, currentPadMapUrl);
+            detailLaunchIntent.putExtra(AGENCY_NAME_EXTRA, currentAgencyName);
+            detailLaunchIntent.putExtra(AGENCY_WIKI_URL_EXTRA, currentAgencyUrl);
 
             mContext.startActivity(detailLaunchIntent);
         }

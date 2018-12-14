@@ -109,7 +109,8 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:text="Mission Title"
-                    android:textSize="16sp" />
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/textview_launch_mission_details"
@@ -216,6 +217,16 @@
                     android:text="Agency"
                     android:textSize="20sp"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/textview_launch_agency"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:linksClickable="true"
+                    android:text="Agency Name"
+                    android:textColorLink="@color/secondaryColor"
+                    android:textSize="16sp" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
