@@ -31,6 +31,8 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
     private String MISSION_SUMMARY_EXTRA = "LAUNCH_MISSION_SUMMARY";
     private String LAUNCH_DATE_EXTRA = "LAUNCH_DATE";
     private String LAUNCH_WINDOW_EXTRA = "LAUNCH_WINDOW";
+    private String ROCKET_NAME_EXTRA  = "LAUNCH_ROCKET_NAME";
+    private String ROCKET_WIKI_URL_EXTRA = "LAUNCH_ROCKET_WIKI_URL";
 
     // Private Variables for constructors
     private ArrayList<Launch> launchList;
@@ -108,13 +110,19 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
             String currentLaunchEndWindow = launchList.get(getAdapterPosition()).getWindowend();
             String currentLaunchWindow = getLocalTimeWindow(currentLaunchStartWindow, currentLaunchEndWindow);
 
-            // Mission Name
-            String currentMissionName = launchList.get(getAdapterPosition()).getMissions().get(0).getName();
+            // Mission Name / Type
+            String currentMissionName = launchList.get(getAdapterPosition()).getMissions().get(0).getTypeName();
 
             // Mission Summary
             String currentMissionSummary = launchList.get(getAdapterPosition()).getMissions().get(0).getDescription();
 
             //TODO putExtra Mission, Agency details
+
+            // Rocket Name
+            String currentRocketName = launchList.get(getAdapterPosition()).getRocket().getName();
+
+            // Rocket Wiki Url
+            String currentRocketWikiUrl = launchList.get(getAdapterPosition()).getRocket().getWikiURL();
 
             Intent detailLaunchIntent = new Intent(mContext, LaunchDetailActivity.class);
 
@@ -125,6 +133,8 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
             detailLaunchIntent.putExtra(MISSION_SUMMARY_EXTRA, currentMissionSummary);
             detailLaunchIntent.putExtra(LAUNCH_DATE_EXTRA,currentLaunchDateLocal);
             detailLaunchIntent.putExtra(LAUNCH_WINDOW_EXTRA,currentLaunchWindow);
+            detailLaunchIntent.putExtra(ROCKET_NAME_EXTRA, currentRocketName);
+            detailLaunchIntent.putExtra(ROCKET_WIKI_URL_EXTRA, currentRocketWikiUrl);
 
             mContext.startActivity(detailLaunchIntent);
         }
@@ -179,24 +189,29 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
         // Example Date String Response: "December 13, 2018 04:00:00 UTC"
         try
         {
-            // Start Date
-            SimpleDateFormat formatter = new SimpleDateFormat("MMM d, yyyy HH:mm:ss z",Locale.ENGLISH);
-            formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-            Date valueDateStart = formatter.parse(startDate);
+            // If startDate is not equal with EndDate
+            if(!startDate.equals(endDate)) {
+                // Start Date
+                SimpleDateFormat formatter = new SimpleDateFormat("MMM d, yyyy HH:mm:ss z", Locale.ENGLISH);
+                formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+                Date valueDateStart = formatter.parse(startDate);
 
-            SimpleDateFormat timeStartFormatter = new SimpleDateFormat("HH:mm",Locale.ENGLISH); //this format changeable
-            timeStartFormatter.setTimeZone(TimeZone.getDefault());
-            startDate = timeStartFormatter.format(valueDateStart);
+                SimpleDateFormat timeStartFormatter = new SimpleDateFormat("HH:mm", Locale.ENGLISH); //this format changeable
+                timeStartFormatter.setTimeZone(TimeZone.getDefault());
+                startDate = timeStartFormatter.format(valueDateStart);
 
-            // End Date
-            Date valueDateEnd = formatter.parse(endDate);
+                // End Date
+                Date valueDateEnd = formatter.parse(endDate);
 
-            SimpleDateFormat timeEndFormatter = new SimpleDateFormat("HH:mm z",Locale.ENGLISH); //this format changeable
-            timeEndFormatter.setTimeZone(TimeZone.getDefault());
-            endDate = timeEndFormatter.format(valueDateEnd);
+                SimpleDateFormat timeEndFormatter = new SimpleDateFormat("HH:mm z", Locale.ENGLISH); //this format changeable
+                timeEndFormatter.setTimeZone(TimeZone.getDefault());
+                endDate = timeEndFormatter.format(valueDateEnd);
 
-            // Set the window time string
-            windowTime = String.format("%s - %s", startDate, endDate);
+                // Set the window time string
+                windowTime = String.format("%s - %s", startDate, endDate);
+            }else{
+                windowTime = "Unknown";
+            }
 
             //Log.d("ourDate", ourDate);
         }

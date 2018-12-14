@@ -3,6 +3,7 @@ package com.example.android.robcket_rocketlaunchschedule.activity;
 import android.os.Bundle;
 
 import com.example.android.robcket_rocketlaunchschedule.R;
+import com.example.android.robcket_rocketlaunchschedule.utils.URLSpanNoUnderline;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.squareup.picasso.Picasso;
@@ -10,6 +11,11 @@ import com.squareup.picasso.Picasso;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.style.URLSpan;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -28,6 +34,9 @@ public class LaunchDetailActivity extends AppCompatActivity {
     private TextView mLaunchMissionNameTextView;
     private TextView mLaunchMissionSummaryTextView;
 
+    // Variables for Rocket
+    private TextView mLaunchRocketNameTextView;
+
     // Variables for putExtra Intents
     private String ROCKET_IMAGE_EXTRA = "LAUNCH_IMAGE_URL";
     private String LAUNCH_TITLE_EXTRA = "LAUNCH_TITLE";
@@ -35,6 +44,8 @@ public class LaunchDetailActivity extends AppCompatActivity {
     private String MISSION_SUMMARY_EXTRA = "LAUNCH_MISSION_SUMMARY";
     private String LAUNCH_DATE_EXTRA = "LAUNCH_DATE";
     private String LAUNCH_WINDOW_EXTRA = "LAUNCH_WINDOW";
+    private String ROCKET_NAME_EXTRA  = "LAUNCH_ROCKET_NAME";
+    private String ROCKET_WIKI_URL_EXTRA = "LAUNCH_ROCKET_WIKI_URL";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +85,9 @@ public class LaunchDetailActivity extends AppCompatActivity {
 
         // Set Mission CardView information
         setMissionInformation();
+
+        // Set Rocket CardView information
+        setRocketInformation();
     }
 
     /**
@@ -100,5 +114,47 @@ public class LaunchDetailActivity extends AppCompatActivity {
         // Set Launch Window
         mLaunchWindowTextView = findViewById(R.id.textview_window_value);
         mLaunchWindowTextView.setText(getIntent().getStringExtra(LAUNCH_WINDOW_EXTRA));
+    }
+
+    /**
+     * This method sets all information in Rocket CardView
+     */
+    private void setRocketInformation(){
+        // Set Rocket Name
+        mLaunchRocketNameTextView = findViewById(R.id.textview_launch_rocket_name);
+
+        // Set HyperLink to Rocket Name TextView
+        mLaunchRocketNameTextView.setMovementMethod(LinkMovementMethod.getInstance());
+
+        // Set Rocket Name and Rocket Wiki URL with value in Intent Extra
+        String rocketName = getIntent().getStringExtra(ROCKET_NAME_EXTRA);
+        String rocketNameWikiUrl = getIntent().getStringExtra(ROCKET_WIKI_URL_EXTRA);
+
+        // Create HyperLink Text
+        String rocketNameHyperLinkText = String.format("<a href='%s' style='text-decoration:none'> %s </a>", rocketNameWikiUrl, rocketName);
+
+        // Set Rocket Name
+        mLaunchRocketNameTextView.setText(Html.fromHtml(rocketNameHyperLinkText));
+
+        // Remove Underline from textview
+        stripUnderlines(mLaunchRocketNameTextView);
+
+    }
+
+    /**
+     * This method removes underline on TextView Hyperlink
+     * @param textView
+     */
+    private void stripUnderlines(TextView textView) {
+        Spannable s = new SpannableString(textView.getText());
+        URLSpan[] spans = s.getSpans(0, s.length(), URLSpan.class);
+        for (URLSpan span: spans) {
+            int start = s.getSpanStart(span);
+            int end = s.getSpanEnd(span);
+            s.removeSpan(span);
+            span = new URLSpanNoUnderline(span.getURL());
+            s.setSpan(span, start, end, 0);
+        }
+        textView.setText(s);
     }
 }
