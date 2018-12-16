@@ -60,7 +60,6 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:padding="3dp"
-            android:text="Date value"
             android:textSize="16sp"
             android:textStyle="bold"
             app:fontFamily="@font/open_sans" />
@@ -82,7 +81,6 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:padding="3dp"
-            android:text="Location value"
             android:textSize="16sp"
             android:textStyle="bold"
             app:fontFamily="@font/open_sans" />
