@@ -9,4 +9,5 @@ public interface GetLaunchDataService {
 
     @GET("launch/next/10")
     Call<LaunchNextList> getLaunchNextListData();
+
 }

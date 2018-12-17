@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -62,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
 
     private String nextLaunchTimerString;
 
+    private ArrayList<Launch> finalLaunchList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,9 +80,6 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-
-        // Save the default values in shared preferences for Settings & Filter
-        androidx.preference.PreferenceManager.setDefaultValues(this, R.xml.preferences,false);
 
         // Applies shared preferences values in SettingsFilter
         applySettingsFilter();
@@ -103,8 +103,6 @@ public class MainActivity extends AppCompatActivity {
         // Set the Navigation Drawer
         setNavigationDrawer(toolbar);
 
-        // Set the Countdown Timer
-        // setCountDownTimer();
 
     }
 
@@ -393,6 +391,7 @@ public class MainActivity extends AppCompatActivity {
                 nextLaunchTimerTextView.setText("LAUNCH IS ON");
             }
         };
+
         // Start Timer
         cdt.start();
     }
@@ -422,14 +421,47 @@ public class MainActivity extends AppCompatActivity {
      * This methods applies values inside of SettingsFilter in MainActivity
      */
     private void applySettingsFilter(){
+        // Save the default values in shared preferences for Settings & Filter
+        PreferenceManager.setDefaultValues(this, R.xml.preferences,false);
+
         // Gets default value of shared preferences
-        SharedPreferences sharedPreferences = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         // Value of notification switch
         Boolean notificationSwitchPref = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_NOTIFICATION_SWITCH, false);
 
+        // Value of filter all
+        Boolean filterAgencyAll = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ALL_CHECKBOX,false);
+
+        // Value of filter NASA
+        Boolean filterAgencyNASA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_NASA_CHECKBOX,false);
+
+        // Value of filter SpaceX
+        Boolean filterAgencySpaceX = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_SPACEX_CHECKBOX,false);
+
+        // Value of filter ULA
+        Boolean filterAgencyULA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ULA_CHECKBOX, false);
+
+        // Value of filter KSC
+        Boolean filterAgencyKSC = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_KSC_CHECKBOX, false);
+
+        // Value of filter Vandenberg
+        Boolean filterAgencyVandenberg = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_VANDENBERG_CHECKBOX, false);
+
+        // Value of filter Arianespace
+        Boolean filterAgencyArianespace = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ARIANESPACE_CHECKBOX, false);
+
+        // Value of filter CASC
+        Boolean filterAgencyCASC = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_CASC_CHECKBOX, false);
+
+        // Value of filter ISRO
+        Boolean filterAgencyISRO = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ISRO_CHECKBOX, false);
+
+        // Value of filter PLESTK
+        Boolean filterAgencyPlestsk = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_PLESTSK_CHECKBOX, false);
+
         // Debug Toast
-        Toast.makeText(this, notificationSwitchPref.toString(), Toast.LENGTH_LONG).show();
+        Toast.makeText(this, filterAgencyAll.toString(), Toast.LENGTH_LONG).show();
     }
 
 }

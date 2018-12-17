@@ -18,8 +18,6 @@ import com.example.android.robcket_rocketlaunchschedule.R;
  */
 public class SettingsFilterFragment extends PreferenceFragmentCompat {
 
-
-
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.preferences,rootKey);

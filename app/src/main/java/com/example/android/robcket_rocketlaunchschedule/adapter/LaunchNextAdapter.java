@@ -11,6 +11,7 @@ import android.widget.TextView;
 import com.example.android.robcket_rocketlaunchschedule.R;
 import com.example.android.robcket_rocketlaunchschedule.activity.LaunchDetailActivity;
 import com.example.android.robcket_rocketlaunchschedule.model.Launch;
+import com.example.android.robcket_rocketlaunchschedule.model.LaunchNextList;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
@@ -157,6 +158,17 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
 
             mContext.startActivity(detailLaunchIntent);
         }
+    }
+
+    // Get the List
+    public ArrayList<Launch> getItems(){
+        return launchList;
+    }
+
+    // Add elements to the list
+    public void addAll(ArrayList<Launch> launchList){
+        launchList.addAll(launchList);
+        notifyDataSetChanged();
     }
 
 
