@@ -2,22 +2,25 @@ package com.example.android.robcket_rocketlaunchschedule.activity;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 
 import com.example.android.robcket_rocketlaunchschedule.adapter.LaunchNextAdapter;
 import com.example.android.robcket_rocketlaunchschedule.model.Launch;
 import com.example.android.robcket_rocketlaunchschedule.model.LaunchNextList;
+import com.example.android.robcket_rocketlaunchschedule.model.Mission;
 import com.example.android.robcket_rocketlaunchschedule.my_interface.GetLaunchDataService;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
 
 import android.os.CountDownTimer;
+import android.view.Gravity;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -42,16 +45,21 @@ import com.stephentuso.welcome.WelcomeHelper;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function3;
+import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -60,26 +68,55 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private SwipeRefreshLayout launchSwipeRefreshLayout;
     private TextView nextLaunchTimerTextView;
+    private Drawer result;
 
     private String nextLaunchTimerString;
 
-    private ArrayList<Launch> finalLaunchList;
+    private ArrayList<Launch> finalLaunchNextList = new ArrayList<>();
+
+
+    /**
+     * Filter Variable
+     */
+    // Value of notification switch
+    private Boolean notificationSwitchPref;
+    // Value of filter NASA
+    private Boolean filterAgencyNASA;
+    // Value of filter SpaceX
+    private Boolean filterAgencySpaceX;
+    // Value of filter ULA
+    private Boolean filterAgencyULA;
+    // Value of filter ROSCOSMOS
+    private Boolean filterAgencyROSCOSMOS;
+    // Value of filter JAXA
+    private Boolean filterAgencyJAXA;
+    // Value of filter Arianespace
+    private Boolean filterAgencyArianespace;
+    // Value of filter CASC
+    private Boolean filterAgencyCASC;
+    // Value of filter ISRO
+    private Boolean filterAgencyISRO;
+    // Value of filter RocketLabLtd
+    private Boolean filterAgencyRocketLabLtd;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                result.openDrawer();
             }
         });
+
+
+        finalLaunchNextList = new ArrayList<>();
 
         // Applies shared preferences values in SettingsFilter
         applySettingsFilter();
@@ -91,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
         launchSwipeRefreshLayout = findViewById(R.id.swiperefresh);
 
         // Set Refresh Listener to launchSwipeRefreshLayout
-        setRocketSwipeRefreshLayout();
+        // setRocketSwipeRefreshLayout();
 
         // Welcome / OnBoard Screen Setup
         welcomeHelper = new WelcomeHelper(this, OnBoardActivity.class);
@@ -121,6 +158,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onBackPressed() {
+        if (result != null && result.isDrawerOpen()) {
+            result.closeDrawer();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -129,8 +175,7 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            Intent settingsFilterIntent = new Intent(this, SettingsFilterActivity.class);
-            startActivity(settingsFilterIntent);
+            result.openDrawer();
             return true;
         } else if (id == R.id.action_tutorial) {
             // Show the OnBoarding / Tutorial screen
@@ -145,48 +190,140 @@ public class MainActivity extends AppCompatActivity {
      * Method to generate List of notice using RecyclerView with custom adapter
      */
     private void generateLaunchList() {
-        // Create handle for the RetrofitInstance interface
-        GetLaunchDataService launchNextService = RetrofitInstance.getRetrofitInstance().create(GetLaunchDataService.class);
 
-        // Call the method with parameter in the interface to get the notice data
-        Call<LaunchNextList> launchNextCall = launchNextService.getLaunchNextListData();
+        GetLaunchDataService launchNextService = RetrofitInstance.getRetrofitRxInstance().create(GetLaunchDataService.class);
 
-        launchNextCall.enqueue(new Callback<LaunchNextList>() {
-            @Override
-            public void onResponse(Call<LaunchNextList> call, Response<LaunchNextList> response) {
-                // Set next launch string variable with the next launch time from json response
-                nextLaunchTimerString = response.body().getLaunches().get(0).getWindowstart();
+        // Observable agencies
+        Observable<LaunchNextList> obs1 = launchNextService.getLaunchNextListDataWithAgency("121");     // SpaceX
+        Observable<LaunchNextList> obs2 = launchNextService.getLaunchNextListDataWithAgency("31");      // ISRO
+        Observable<LaunchNextList> obs3 = launchNextService.getLaunchNextListDataWithAgency("44");      // NASA
 
-                // Set the Countdown Timer
-                setCountDownTimer();
+        Observable<List<LaunchNextList>> result =
+                Observable.zip(
+                        obs1.subscribeOn(Schedulers.io()),
+                        obs2.subscribeOn(Schedulers.io()),
+                        obs3.subscribeOn(Schedulers.io()),
+                        new Function3<LaunchNextList, LaunchNextList, LaunchNextList, List<LaunchNextList>>() {
+                            @Override
+                            public List<LaunchNextList> apply(LaunchNextList type1, LaunchNextList type2, LaunchNextList type3) {
+                                List<LaunchNextList> list = new ArrayList();
+                                list.add(type1);
+                                list.add(type2);
+                                list.add(type3);
+                                return list;
+                            }
+                        });
 
-                recyclerView = findViewById(R.id.recycler_view_notice_list);
-                launchNextAdapter = new LaunchNextAdapter(MainActivity.this, response.body().getLaunches());
+        result.observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new Observer<List<LaunchNextList>>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
 
-                // Setup layout manager
-                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
-                recyclerView.setLayoutManager(layoutManager);
-                recyclerView.setAdapter(launchNextAdapter);
-            }
+                    }
 
-            @Override
-            public void onFailure(Call<LaunchNextList> call, Throwable t) {
-                ArrayList<Launch> launchNextFailureList = new ArrayList<Launch>();
+                    @Override
+                    public void onNext(List<LaunchNextList> launchNextLists) {
+                        // Debug Toast
+                        // Toast.makeText(MainActivity.this, String.valueOf(launchNextLists.size()), Toast.LENGTH_LONG).show();
 
-                recyclerView = findViewById(R.id.recycler_view_notice_list);
-                launchNextAdapter = new LaunchNextAdapter(MainActivity.this, launchNextFailureList);
+                        for (int i = 0; i < launchNextLists.size(); i++) {
+                            finalLaunchNextList.addAll(launchNextLists.get(i).getLaunches());
+                        }
 
-                // Setup layout manager
-                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
-                recyclerView.setLayoutManager(layoutManager);
-                recyclerView.setAdapter(launchNextAdapter);
+                        // Sort the final launch next list based on date
+                        Collections.sort(finalLaunchNextList, new Comparator<Launch>() {
+                            @Override
+                            public int compare(Launch r1, Launch r2) {
+                                // Get Date from string datetime window start of each launch
+                                Date launchDate1 = convertJSONStringToDate(r1.getWindowstart());
+                                Date launchDate2 = convertJSONStringToDate(r2.getWindowstart());
 
-                // Show Toast
-                Toast.makeText(MainActivity.this,
-                        "Unable to load the list.\nPlease check your connection"
-                        , Toast.LENGTH_LONG).show();
-            }
-        });
+                                return launchDate1.compareTo(launchDate2);
+                            }
+                        });
+
+                        //Create ArrayList for Mission List
+                        ArrayList<Mission> missionListSorted = new ArrayList<>();
+
+                        for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                            if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
+                                missionListSorted.add(new Mission("TBD", "No Information available"));
+                            }
+                            missionListSorted.addAll(finalLaunchNextList.get(i).getMissions());
+                        }
+
+                        Toast.makeText(MainActivity.this, String.valueOf(missionListSorted.size()), Toast.LENGTH_LONG).show();
+
+                        // Set next launch string variable with the next launch time from json response
+                        nextLaunchTimerString = finalLaunchNextList.get(0).getWindowstart();
+
+
+                        // Set the Countdown Timer
+                        setCountDownTimer();
+
+                        recyclerView = findViewById(R.id.recycler_view_notice_list);
+                        launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
+
+                        // Setup layout manager
+                        LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                        recyclerView.setLayoutManager(layoutManager);
+                        recyclerView.setAdapter(launchNextAdapter);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+
+
+//        // Create handle for the RetrofitInstance interface
+//        GetLaunchDataService launchNextService = RetrofitInstance.getRetrofitInstance().create(GetLaunchDataService.class);
+//
+//        // Call the method with parameter in the interface to get the notice data
+//        Call<LaunchNextList> launchNextCall = launchNextService.getLaunchNextListData();
+//
+//        launchNextCall.enqueue(new Callback<LaunchNextList>() {
+//            @Override
+//            public void onResponse(Call<LaunchNextList> call, Response<LaunchNextList> response) {
+//                // Set next launch string variable with the next launch time from json response
+//                nextLaunchTimerString = response.body().getLaunches().get(0).getWindowstart();
+//
+//                // Set the Countdown Timer
+//                setCountDownTimer();
+//
+//                recyclerView = findViewById(R.id.recycler_view_notice_list);
+//                launchNextAdapter = new LaunchNextAdapter(MainActivity.this, response.body().getLaunches());
+//
+//                // Setup layout manager
+//                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+//                recyclerView.setLayoutManager(layoutManager);
+//                recyclerView.setAdapter(launchNextAdapter);
+//            }
+//
+//            @Override
+//            public void onFailure(Call<LaunchNextList> call, Throwable t) {
+//                ArrayList<Launch> launchNextFailureList = new ArrayList<Launch>();
+//
+//                recyclerView = findViewById(R.id.recycler_view_notice_list);
+//                launchNextAdapter = new LaunchNextAdapter(MainActivity.this, launchNextFailureList);
+//
+//                // Setup layout manager
+//                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+//                recyclerView.setLayoutManager(layoutManager);
+//                recyclerView.setAdapter(launchNextAdapter);
+//
+//                // Show Toast
+//                Toast.makeText(MainActivity.this,
+//                        "Unable to load the list.\nPlease check your connection"
+//                        , Toast.LENGTH_LONG).show();
+//            }
+//        });
     }
 
     /**
@@ -200,10 +337,11 @@ public class MainActivity extends AppCompatActivity {
                 .withActivity(this)
                 .withHeaderBackground(R.color.secondaryColor)
                 .withSelectionListEnabledForSingleProfile(false)
+                //.withHeightDp(56)
                 .withTextColor(getResources().getColor(R.color.material_drawer_dark_primary_text))
                 .addProfiles(
-                        new ProfileDrawerItem().withName("Robcket")
-                                .withEmail("Rocket Launcher Schedule App")
+                        new ProfileDrawerItem().withName("Settings & Filter")
+                                //.withEmail("Rocket Launcher Schedule App")
                                 .withIcon(getResources().getDrawable(R.mipmap.ic_launcher))
                 )
                 .withProfileImagesVisible(false)
@@ -241,11 +379,16 @@ public class MainActivity extends AppCompatActivity {
                 .withName(R.string.drawer_item_about)
                 .withIcon(FontAwesome.Icon.faw_user);
 
+
         //create the drawer and remember the `Drawer` result object
-        Drawer result = new DrawerBuilder()
+        result = new DrawerBuilder()
                 .withAccountHeader(headerResult)
                 .withActivity(this)
-                .withToolbar(toolbar)
+                .withTranslucentStatusBar(true)
+                .withFullscreen(true)
+                .withDrawerGravity(Gravity.END)
+                //.withDrawerWidthPx(matchParentWidth)
+                //.withToolbar(toolbar)
                 .addDrawerItems(
                         itemHome,
                         itemRocket,
@@ -272,85 +415,96 @@ public class MainActivity extends AppCompatActivity {
                         return true;
                     }
                 })
+                //.withSavedInstance()
                 .build();
+
+        //Get the DrawerLayout from the Drawer
+        DrawerLayout drawerLayout = result.getDrawerLayout();
+
+        //Lock the Drawer
+        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+
+        if (Build.VERSION.SDK_INT >= 19) {
+            result.getDrawerLayout().setFitsSystemWindows(false);
+        }
     }
 
     /**
      * Sets up a SwipeRefreshLayout.OnRefreshListener and Refresh signal colors that is invoked when the user
      * performs a swipe-to-refresh gesture.
      */
-    private void setRocketSwipeRefreshLayout() {
-        launchSwipeRefreshLayout.setOnRefreshListener(
-                new SwipeRefreshLayout.OnRefreshListener() {
-                    @Override
-                    public void onRefresh() {
-                        // Your code to refresh the list here.
-                        // Make sure you call swipeContainer.setRefreshing(false)
-                        // once the network request has completed successfully.
-                        // Create handle for the RetrofitInstance interface
-                        GetLaunchDataService launchNextService = RetrofitInstance.getRetrofitInstance().create(GetLaunchDataService.class);
-
-                        // Call the method with parameter in the interface to get the notice data
-                        Call<LaunchNextList> launchNextCall = launchNextService.getLaunchNextListData();
-
-                        launchNextCall.enqueue(new Callback<LaunchNextList>() {
-                            @Override
-                            public void onResponse(Call<LaunchNextList> call, Response<LaunchNextList> response) {
-                                // Clear the rocketList to avoid duplication, if the rocket list has already populated
-                                launchNextAdapter.clear();
-
-                                // Set next launch string variable with the next launch time from json response
-                                nextLaunchTimerString = response.body().getLaunches().get(0).getWindowstart();
-
-                                // Set the Countdown Timer
-                                setCountDownTimer();
-
-                                recyclerView = findViewById(R.id.recycler_view_notice_list);
-                                launchNextAdapter = new LaunchNextAdapter(MainActivity.this, response.body().getLaunches());
-
-                                // Setup layout manager
-                                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
-                                recyclerView.setLayoutManager(layoutManager);
-                                recyclerView.setAdapter(launchNextAdapter);
-
-                                // Remove the refresh signal after finished
-                                launchSwipeRefreshLayout.setRefreshing(false);
-                            }
-
-                            @Override
-                            public void onFailure(Call<LaunchNextList> call, Throwable t) {
-                                // Clear the rocketList to avoid duplication, if the rocket list has already populated
-                                launchNextAdapter.clear();
-
-                                ArrayList<Launch> launchNextFailureList = new ArrayList<Launch>();
-
-                                recyclerView = findViewById(R.id.recycler_view_notice_list);
-                                launchNextAdapter = new LaunchNextAdapter(MainActivity.this, launchNextFailureList);
-
-                                // Setup layout manager
-                                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
-                                recyclerView.setLayoutManager(layoutManager);
-                                recyclerView.setAdapter(launchNextAdapter);
-
-                                // Show Toast
-                                Toast.makeText(MainActivity.this,
-                                        "Unable to load the list.\nPlease check your connection"
-                                        , Toast.LENGTH_LONG).show();
-
-                                // Remove the refresh signal after finished
-                                launchSwipeRefreshLayout.setRefreshing(false);
-                            }
-                        });
-                    }
-                }
-        );
-
-        // Scheme colors for animation
-        launchSwipeRefreshLayout.setColorSchemeColors(
-                getResources().getColor(R.color.secondaryLightColor)
-        );
-
-    }
+//    private void setRocketSwipeRefreshLayout() {
+//        launchSwipeRefreshLayout.setOnRefreshListener(
+//                new SwipeRefreshLayout.OnRefreshListener() {
+//                    @Override
+//                    public void onRefresh() {
+//                        // Your code to refresh the list here.
+//                        // Make sure you call swipeContainer.setRefreshing(false)
+//                        // once the network request has completed successfully.
+//                        // Create handle for the RetrofitInstance interface
+//                        GetLaunchDataService launchNextService = RetrofitInstance.getRetrofitInstance().create(GetLaunchDataService.class);
+//
+//                        // Call the method with parameter in the interface to get the notice data
+//                        Call<LaunchNextList> launchNextCall = launchNextService.getLaunchNextListData();
+//
+//                        launchNextCall.enqueue(new Callback<LaunchNextList>() {
+//                            @Override
+//                            public void onResponse(Call<LaunchNextList> call, Response<LaunchNextList> response) {
+//                                // Clear the rocketList to avoid duplication, if the rocket list has already populated
+//                                launchNextAdapter.clear();
+//
+//                                // Set next launch string variable with the next launch time from json response
+//                                nextLaunchTimerString = response.body().getLaunches().get(0).getWindowstart();
+//
+//                                // Set the Countdown Timer
+//                                setCountDownTimer();
+//
+//                                recyclerView = findViewById(R.id.recycler_view_notice_list);
+//                                launchNextAdapter = new LaunchNextAdapter(MainActivity.this, response.body().getLaunches());
+//
+//                                // Setup layout manager
+//                                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+//                                recyclerView.setLayoutManager(layoutManager);
+//                                recyclerView.setAdapter(launchNextAdapter);
+//
+//                                // Remove the refresh signal after finished
+//                                launchSwipeRefreshLayout.setRefreshing(false);
+//                            }
+//
+//                            @Override
+//                            public void onFailure(Call<LaunchNextList> call, Throwable t) {
+//                                // Clear the rocketList to avoid duplication, if the rocket list has already populated
+//                                launchNextAdapter.clear();
+//
+//                                ArrayList<Launch> launchNextFailureList = new ArrayList<Launch>();
+//
+//                                recyclerView = findViewById(R.id.recycler_view_notice_list);
+//                                launchNextAdapter = new LaunchNextAdapter(MainActivity.this, launchNextFailureList);
+//
+//                                // Setup layout manager
+//                                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+//                                recyclerView.setLayoutManager(layoutManager);
+//                                recyclerView.setAdapter(launchNextAdapter);
+//
+//                                // Show Toast
+//                                Toast.makeText(MainActivity.this,
+//                                        "Unable to load the list.\nPlease check your connection"
+//                                        , Toast.LENGTH_LONG).show();
+//
+//                                // Remove the refresh signal after finished
+//                                launchSwipeRefreshLayout.setRefreshing(false);
+//                            }
+//                        });
+//                    }
+//                }
+//        );
+//
+//        // Scheme colors for animation
+//        launchSwipeRefreshLayout.setColorSchemeColors(
+//                getResources().getColor(R.color.secondaryLightColor)
+//        );
+//
+//    }
 
     /**
      * This method sets the countdown timer for the launch
@@ -383,7 +537,7 @@ public class MainActivity extends AppCompatActivity {
 
                 long seconds = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished);
 
-                nextLaunchTimerTextView.setText(days + "D " + hours + "H " + minutes + "M " + seconds +"S "); //You can compute the millisUntilFinished on hours/minutes/seconds
+                nextLaunchTimerTextView.setText(days + " D " + hours + " H " + minutes + " M " + seconds + " S "); //You can compute the millisUntilFinished on hours/minutes/seconds
             }
 
             @Override
@@ -420,49 +574,48 @@ public class MainActivity extends AppCompatActivity {
     /**
      * This methods applies values inside of SettingsFilter in MainActivity
      */
-    private void applySettingsFilter(){
+    private void applySettingsFilter() {
         // Save the default values in shared preferences for Settings & Filter
-        PreferenceManager.setDefaultValues(this, R.xml.preferences,false);
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
         // Gets default value of shared preferences
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         // Value of notification switch
-        Boolean notificationSwitchPref = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_NOTIFICATION_SWITCH, false);
-
-        // Value of filter all
-        Boolean filterAgencyAll = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ALL_CHECKBOX,false);
+        notificationSwitchPref = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_NOTIFICATION_SWITCH, false);
 
         // Value of filter NASA
-        Boolean filterAgencyNASA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_NASA_CHECKBOX,false);
+        filterAgencyNASA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_NASA_CHECKBOX, false);
 
         // Value of filter SpaceX
-        Boolean filterAgencySpaceX = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_SPACEX_CHECKBOX,false);
+        filterAgencySpaceX = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_SPACEX_CHECKBOX, false);
 
         // Value of filter ULA
-        Boolean filterAgencyULA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ULA_CHECKBOX, false);
+        filterAgencyULA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ULA_CHECKBOX, false);
 
-        // Value of filter KSC
-        Boolean filterAgencyKSC = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_KSC_CHECKBOX, false);
+        // Value of filter ROSCOSMOS
+        filterAgencyROSCOSMOS = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ROSCOSMOS_CHECKBOX, false);
 
-        // Value of filter Vandenberg
-        Boolean filterAgencyVandenberg = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_VANDENBERG_CHECKBOX, false);
+        // Value of filter JAXA
+        filterAgencyJAXA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_JAXA_CHECKBOX, false);
 
         // Value of filter Arianespace
-        Boolean filterAgencyArianespace = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ARIANESPACE_CHECKBOX, false);
+        filterAgencyArianespace = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ARIANESPACE_CHECKBOX, false);
 
         // Value of filter CASC
-        Boolean filterAgencyCASC = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_CASC_CHECKBOX, false);
+        filterAgencyCASC = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_CASC_CHECKBOX, false);
 
         // Value of filter ISRO
-        Boolean filterAgencyISRO = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ISRO_CHECKBOX, false);
+        filterAgencyISRO = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ISRO_CHECKBOX, false);
 
-        // Value of filter PLESTK
-        Boolean filterAgencyPlestsk = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_PLESTSK_CHECKBOX, false);
+        // Value of filter RocketLabLtd
+        filterAgencyRocketLabLtd = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ROCKETLABLTD_CHECKBOX, false);
 
         // Debug Toast
-        Toast.makeText(this, filterAgencyAll.toString(), Toast.LENGTH_LONG).show();
+        // Toast.makeText(this, filterAgencyAll.toString(), Toast.LENGTH_LONG).show();
     }
+
+
 
 }
 
