@@ -10,6 +10,7 @@ import com.example.android.robcket_rocketlaunchschedule.model.Launch;
 import com.example.android.robcket_rocketlaunchschedule.model.LaunchNextList;
 import com.example.android.robcket_rocketlaunchschedule.model.Mission;
 import com.example.android.robcket_rocketlaunchschedule.my_interface.GetLaunchDataService;
+import com.example.android.robcket_rocketlaunchschedule.utils.GlobalConstants;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,10 +21,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
 
 import android.os.CountDownTimer;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,12 +37,17 @@ import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.interfaces.OnCheckedChangeListener;
 import com.mikepenz.materialdrawer.model.DividerDrawerItem;
+import com.mikepenz.materialdrawer.model.ExpandableDrawerItem;
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
+import com.mikepenz.materialdrawer.model.SwitchDrawerItem;
+import com.mikepenz.materialdrawer.model.ToggleDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
+import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.stephentuso.welcome.WelcomeHelper;
 
 import java.text.SimpleDateFormat;
@@ -74,30 +82,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayList<Launch> finalLaunchNextList = new ArrayList<>();
 
-
-    /**
-     * Filter Variable
-     */
-    // Value of notification switch
-    private Boolean notificationSwitchPref;
-    // Value of filter NASA
-    private Boolean filterAgencyNASA;
-    // Value of filter SpaceX
-    private Boolean filterAgencySpaceX;
-    // Value of filter ULA
-    private Boolean filterAgencyULA;
-    // Value of filter ROSCOSMOS
-    private Boolean filterAgencyROSCOSMOS;
-    // Value of filter JAXA
-    private Boolean filterAgencyJAXA;
-    // Value of filter Arianespace
-    private Boolean filterAgencyArianespace;
-    // Value of filter CASC
-    private Boolean filterAgencyCASC;
-    // Value of filter ISRO
-    private Boolean filterAgencyISRO;
-    // Value of filter RocketLabLtd
-    private Boolean filterAgencyRocketLabLtd;
+    private SharedPreferences filterSettingsSharedPreferences;
+    private SharedPreferences.Editor preferencesEditor;
 
 
     @Override
@@ -115,6 +101,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        filterSettingsSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        preferencesEditor = filterSettingsSharedPreferences.edit();
 
         finalLaunchNextList = new ArrayList<>();
 
@@ -354,30 +342,56 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         //if you want to update the items at a later time it is recommended to keep it in a variable
-        PrimaryDrawerItem itemHome = new PrimaryDrawerItem()
+        SwitchDrawerItem itemNotification = new SwitchDrawerItem()
                 .withIdentifier(1)
-                .withName(R.string.drawer_item_home)
-                .withIcon(FontAwesome.Icon.faw_home);
-        PrimaryDrawerItem itemRocket = new PrimaryDrawerItem()
+                .withName("Notification")
+                .withDescription("Turn notification on or off")
+                .withDescriptionTextColor(getResources().getColor(R.color.material_drawer_header_selection_subtext))
+                .withIcon(FontAwesome.Icon.faw_bell)
+                .withSelectable(false);
+
+        ExpandableDrawerItem itemFilterAgency = new ExpandableDrawerItem()
                 .withIdentifier(2)
-                .withName(R.string.drawer_item_rocket)
-                .withIcon(FontAwesome.Icon.faw_space_shuttle);
-        PrimaryDrawerItem itemFilter = new PrimaryDrawerItem()
+                .withName("Filter by agencies")
+                .withIcon(FontAwesome.Icon.faw_place_of_worship)
+                .withSelectable(false)
+                .withSubItems(
+                        new SwitchDrawerItem().withName("NASA").withLevel(2).withIdentifier(4)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyNASA, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("SpaceX").withLevel(2).withIdentifier(5)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencySpaceX, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("ISRO").withLevel(2).withIdentifier(6)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyISRO, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Arianespace").withLevel(2).withIdentifier(7)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyArianespace, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("JAXA").withLevel(2).withIdentifier(8)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyJAXA, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("ROSCOSMOS").withLevel(2).withIdentifier(9)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyROSCOSMOS, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("CASC").withLevel(2).withIdentifier(10)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyCASC, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("ULA").withLevel(2).withIdentifier(11)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyULA, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Rocket Lab Ltd").withLevel(2).withIdentifier(12)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyRocketLabLtd, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener)
+                );
+        ExpandableDrawerItem itemFilterLocation = new ExpandableDrawerItem()
                 .withIdentifier(3)
-                .withName(R.string.drawer_item_filter)
-                .withIcon(FontAwesome.Icon.faw_filter);
-        SecondaryDrawerItem itemSettings = new SecondaryDrawerItem()
-                .withIdentifier(4)
-                .withName(R.string.drawer_item_settings)
-                .withIcon(FontAwesome.Icon.faw_cogs);
-        SecondaryDrawerItem itemHelp = new SecondaryDrawerItem()
-                .withIdentifier(5)
-                .withName(R.string.drawer_item_help)
-                .withIcon(FontAwesome.Icon.faw_question);
-        SecondaryDrawerItem itemAbout = new SecondaryDrawerItem()
-                .withIdentifier(6)
-                .withName(R.string.drawer_item_about)
-                .withIcon(FontAwesome.Icon.faw_user);
+                .withName("Filter by locations")
+                .withIcon(FontAwesome.Icon.faw_globe_americas)
+                .withSelectable(false)
+                .withSubItems(
+
+                );
 
 
         //create the drawer and remember the `Drawer` result object
@@ -386,37 +400,29 @@ public class MainActivity extends AppCompatActivity {
                 .withActivity(this)
                 .withTranslucentStatusBar(true)
                 .withFullscreen(true)
+                .withSelectedItem(-1)
                 .withDrawerGravity(Gravity.END)
                 //.withDrawerWidthPx(matchParentWidth)
                 //.withToolbar(toolbar)
                 .addDrawerItems(
-                        itemHome,
-                        itemRocket,
-                        itemFilter,
+                        itemNotification,
                         new DividerDrawerItem(),
-                        itemSettings,
-                        itemHelp,
-                        itemAbout
+                        itemFilterAgency,
+                        new DividerDrawerItem(),
+                        itemFilterLocation
                 )
                 .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
                         // do something with the clicked item :D
                         switch (position) {
-                            case 1:
-                                Intent homeIntent = new Intent(view.getContext(), MainActivity.class);
-                                startActivity(homeIntent);
-                                break;
-                            case 2:
-                                Intent rocketIntent = new Intent(view.getContext(), RocketActivity.class);
-                                startActivity(rocketIntent);
-                                break;
                         }
                         return true;
                     }
                 })
                 //.withSavedInstance()
                 .build();
+
 
         //Get the DrawerLayout from the Drawer
         DrawerLayout drawerLayout = result.getDrawerLayout();
@@ -428,6 +434,81 @@ public class MainActivity extends AppCompatActivity {
             result.getDrawerLayout().setFitsSystemWindows(false);
         }
     }
+
+    /**
+     * This method handles check behaviour for switch- and toggleitems in the drawer
+     */
+    private OnCheckedChangeListener onCheckedChangeListener = new OnCheckedChangeListener() {
+
+
+        @Override
+        public void onCheckedChanged(IDrawerItem drawerItem, CompoundButton buttonView, boolean isChecked) {
+            if (drawerItem instanceof Nameable) {
+
+                Log.i("material-drawer", "DrawerItem: " + ((Nameable) drawerItem).getName() + " - toggleChecked: " + isChecked);
+
+                // ID Identifier for items
+                int id = (int) drawerItem.getIdentifier();
+
+                /**
+                 * saves value of check into the shared preference in global constants class
+                 */
+                switch (id) {
+                    // NASA
+                    case 4:
+                        // Debug Toast
+                        Toast.makeText(MainActivity.this, "DrawerItem: " + ((Nameable) drawerItem).getName() + " - toggleChecked: " + isChecked, Toast.LENGTH_SHORT).show();
+                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyNASA, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // SpaceX
+                    case 5:
+                        preferencesEditor.putBoolean(GlobalConstants.filterAgencySpaceX, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // ISRO
+                    case 6:
+                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyISRO, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Arianespace
+                    case 7:
+                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyNASA, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // JAXA
+                    case 8:
+                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyJAXA, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // ROSCOSMOS
+                    case 9:
+                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyROSCOSMOS, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // CASC
+                    case 10:
+                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyCASC, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // ULA
+                    case 11:
+                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyULA, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // RocketLab Ltd
+                    case 12:
+                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyRocketLabLtd, isChecked);
+                        preferencesEditor.apply();
+                        break;
+
+                }
+
+            } else {
+                Log.i("material-drawer", "toggleChecked: " + isChecked);
+            }
+        }
+    };
 
     /**
      * Sets up a SwipeRefreshLayout.OnRefreshListener and Refresh signal colors that is invoked when the user
@@ -579,42 +660,41 @@ public class MainActivity extends AppCompatActivity {
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
         // Gets default value of shared preferences
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+//        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        // Value of notification switch
-        notificationSwitchPref = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_NOTIFICATION_SWITCH, false);
-
-        // Value of filter NASA
-        filterAgencyNASA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_NASA_CHECKBOX, false);
-
-        // Value of filter SpaceX
-        filterAgencySpaceX = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_SPACEX_CHECKBOX, false);
-
-        // Value of filter ULA
-        filterAgencyULA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ULA_CHECKBOX, false);
-
-        // Value of filter ROSCOSMOS
-        filterAgencyROSCOSMOS = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ROSCOSMOS_CHECKBOX, false);
-
-        // Value of filter JAXA
-        filterAgencyJAXA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_JAXA_CHECKBOX, false);
-
-        // Value of filter Arianespace
-        filterAgencyArianespace = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ARIANESPACE_CHECKBOX, false);
-
-        // Value of filter CASC
-        filterAgencyCASC = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_CASC_CHECKBOX, false);
-
-        // Value of filter ISRO
-        filterAgencyISRO = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ISRO_CHECKBOX, false);
-
-        // Value of filter RocketLabLtd
-        filterAgencyRocketLabLtd = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ROCKETLABLTD_CHECKBOX, false);
+//        // Value of notification switch
+//        notificationSwitchPref = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_NOTIFICATION_SWITCH, false);
+//
+//        // Value of filter NASA
+//        GlobalConstants.filterAgencyNASA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_NASA_CHECKBOX, false);
+//
+//        // Value of filter SpaceX
+//        filterAgencySpaceX = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_SPACEX_CHECKBOX, false);
+//
+//        // Value of filter ULA
+//        filterAgencyULA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ULA_CHECKBOX, false);
+//
+//        // Value of filter ROSCOSMOS
+//        filterAgencyROSCOSMOS = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ROSCOSMOS_CHECKBOX, false);
+//
+//        // Value of filter JAXA
+//        filterAgencyJAXA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_JAXA_CHECKBOX, false);
+//
+//        // Value of filter Arianespace
+//        filterAgencyArianespace = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ARIANESPACE_CHECKBOX, false);
+//
+//        // Value of filter CASC
+//        filterAgencyCASC = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_CASC_CHECKBOX, false);
+//
+//        // Value of filter ISRO
+//        filterAgencyISRO = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ISRO_CHECKBOX, false);
+//
+//        // Value of filter RocketLabLtd
+//        filterAgencyRocketLabLtd = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ROCKETLABLTD_CHECKBOX, false);
 
         // Debug Toast
         // Toast.makeText(this, filterAgencyAll.toString(), Toast.LENGTH_LONG).show();
     }
-
 
 
 }
