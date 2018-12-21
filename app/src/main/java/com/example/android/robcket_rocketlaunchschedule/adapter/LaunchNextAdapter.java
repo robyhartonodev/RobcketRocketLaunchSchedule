@@ -12,6 +12,7 @@ import com.example.android.robcket_rocketlaunchschedule.R;
 import com.example.android.robcket_rocketlaunchschedule.activity.LaunchDetailActivity;
 import com.example.android.robcket_rocketlaunchschedule.model.Launch;
 import com.example.android.robcket_rocketlaunchschedule.model.LaunchNextList;
+import com.example.android.robcket_rocketlaunchschedule.model.Mission;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
@@ -42,10 +43,12 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
     // Private Variables for constructors
     private ArrayList<Launch> launchList;
     private Context mContext;
+    private ArrayList<Mission> missionList;
 
-    public LaunchNextAdapter(Context context, ArrayList<Launch> launchList) {
+    public LaunchNextAdapter(Context context, ArrayList<Launch> launchList, ArrayList<Mission> missionList) {
         this.launchList = launchList;
         this.mContext = context;
+        this.missionList = missionList;
     }
 
     @NonNull
@@ -117,10 +120,10 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
             String currentLaunchWindow = getLocalTimeWindow(currentLaunchStartWindow, currentLaunchEndWindow);
 
             // Mission Name / Type
-            String currentMissionName = launchList.get(getAdapterPosition()).getMissions().get(0).getName();
+            String currentMissionName = missionList.get(getAdapterPosition()).getName();
 
             // Mission Summary
-            String currentMissionSummary = launchList.get(getAdapterPosition()).getMissions().get(0).getDescription();
+            String currentMissionSummary = missionList.get(getAdapterPosition()).getDescription();
 
             // Rocket Name
             String currentRocketName = launchList.get(getAdapterPosition()).getRocket().getName();
@@ -161,12 +164,12 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
     }
 
     // Get the List
-    public ArrayList<Launch> getItems(){
+    public ArrayList<Launch> getItems() {
         return launchList;
     }
 
     // Add elements to the list
-    public void addAll(ArrayList<Launch> launchList){
+    public void addAll(ArrayList<Launch> launchList) {
         launchList.addAll(launchList);
         notifyDataSetChanged();
     }
