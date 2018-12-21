@@ -10,30 +10,6 @@
 
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="check_box_preference_all"
-            android:title="All" />
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="check_box_preference_nasa"
-            android:title="NASA" />
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="check_box_preference_spacex"
-            android:title="SpaceX" />
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="check_box_preference_ula"
-            android:title="ULA" />
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="check_box_preference_ksc"
-            android:title="Kennedy Space Center" />
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="check_box_preference_vandenberg"
-            android:title="Vandenberg AFB" />
-        <CheckBoxPreference
-            android:defaultValue="false"
             android:key="check_box_preference_arianespace"
             android:title="Arianespace" />
         <CheckBoxPreference
@@ -46,7 +22,27 @@
             android:title="ISRO" />
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="check_box_preference_plestsk"
-            android:title="Plestsk Cosmodrome" />
+            android:key="check_box_preference_jaxa"
+            android:title="JAXA" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="check_box_preference_nasa"
+            android:title="NASA" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="check_box_preference_rocketlabltd"
+            android:title="Rocket Lab Ltd" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="check_box_preference_roscosmos"
+            android:title="ROSCOSMOS" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="check_box_preference_spacex"
+            android:title="SpaceX" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="check_box_preference_ula"
+            android:title="ULA" />
     </PreferenceCategory>
 </PreferenceScreen>
