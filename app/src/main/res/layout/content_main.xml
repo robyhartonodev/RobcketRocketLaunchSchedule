@@ -19,7 +19,7 @@
         android:textColor="@color/material_drawer_dark_primary_text"
         android:textSize="14sp"
         android:textStyle="bold"
-        app:fontFamily="@font/open_sans" />
+        app:fontFamily="@font/orbitron" />
 
     <TextView
         android:id="@+id/textview_next_launch_timer"
@@ -30,9 +30,9 @@
         android:gravity="center"
         android:text="00 D 00 H 00 M 00 S"
         android:textColor="@color/material_drawer_dark_primary_text"
-        android:textSize="32sp"
+        android:textSize="28sp"
         android:textStyle="bold"
-        app:fontFamily="@font/open_sans" />
+        app:fontFamily="@font/orbitron" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swiperefresh"

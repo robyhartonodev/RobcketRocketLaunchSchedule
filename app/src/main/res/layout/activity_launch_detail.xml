@@ -8,23 +8,23 @@
     tools:context=".activity.LaunchDetailActivity">
 
     <!--<androidx.viewpager.widget.ViewPager-->
-        <!--android:id="@+id/pager"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent"-->
-        <!--android:layout_marginTop="?attr/actionBarSize"-->
-        <!--app:layout_behavior="@string/appbar_scrolling_view_behavior" />-->
+    <!--android:id="@+id/pager"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="match_parent"-->
+    <!--android:layout_marginTop="?attr/actionBarSize"-->
+    <!--app:layout_behavior="@string/appbar_scrolling_view_behavior" />-->
 
     <!--<com.google.android.material.tabs.TabLayout-->
-        <!--android:id="@+id/tab_layout"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="?attr/actionBarSize"-->
-        <!--android:layout_gravity="bottom"-->
-        <!--android:background="?attr/colorPrimary"-->
-        <!--android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"-->
-        <!--app:layout_anchor="@+id/app_bar"-->
-        <!--app:layout_anchorGravity="bottom"-->
-        <!--app:tabGravity="center"-->
-        <!--app:tabMode="fixed" />-->
+    <!--android:id="@+id/tab_layout"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="?attr/actionBarSize"-->
+    <!--android:layout_gravity="bottom"-->
+    <!--android:background="?attr/colorPrimary"-->
+    <!--android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"-->
+    <!--app:layout_anchor="@+id/app_bar"-->
+    <!--app:layout_anchorGravity="bottom"-->
+    <!--app:tabGravity="center"-->
+    <!--app:tabMode="fixed" />-->
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar"
