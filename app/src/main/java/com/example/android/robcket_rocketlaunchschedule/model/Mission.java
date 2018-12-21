@@ -8,6 +8,11 @@ import com.google.gson.annotations.SerializedName;
 
 public class Mission {
 
+    public Mission(String name, String description){
+        this.name = name;
+        this.description = description;
+    }
+
     @SerializedName("id")
     @Expose
     private int id;
