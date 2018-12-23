@@ -10,10 +10,10 @@ import retrofit2.http.Query;
 
 public interface GetLaunchDataService {
 
-    @GET("launch/next/10")
+    @GET("launch/next/30")
     Call<LaunchNextList> getLaunchNextListData();
 
-    @GET("launch/next/10")
+    @GET("launch/next/30")
     Observable<LaunchNextList> getLaunchNextListDataWithAgency(@Query("lsp") String lsp);
 
 }
