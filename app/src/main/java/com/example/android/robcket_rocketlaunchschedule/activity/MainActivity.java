@@ -67,7 +67,11 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function3;
+import io.reactivex.functions.Function9;
 import io.reactivex.schedulers.Schedulers;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -101,13 +105,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Shared Preferences setup
         filterSettingsSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         preferencesEditor = filterSettingsSharedPreferences.edit();
-
-        finalLaunchNextList = new ArrayList<>();
-
-        // Applies shared preferences values in SettingsFilter
-        applySettingsFilter();
 
         // Set Next Launch Timer TextView
         nextLaunchTimerTextView = findViewById(R.id.textview_next_launch_timer);
@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
         launchSwipeRefreshLayout = findViewById(R.id.swiperefresh);
 
         // Set Refresh Listener to launchSwipeRefreshLayout
-        // setRocketSwipeRefreshLayout();
+        setRocketSwipeRefreshLayout();
 
         // Welcome / OnBoard Screen Setup
         welcomeHelper = new WelcomeHelper(this, OnBoardActivity.class);
@@ -127,8 +127,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Set the Navigation Drawer
         setNavigationDrawer(toolbar);
-
-
     }
 
 
@@ -149,6 +147,10 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         if (result != null && result.isDrawerOpen()) {
             result.closeDrawer();
+            // Recreate activity with saved settings
+            Intent intent = getIntent();
+            finish();
+            startActivity(intent);
         } else {
             super.onBackPressed();
         }
@@ -178,140 +180,194 @@ public class MainActivity extends AppCompatActivity {
      * Method to generate List of notice using RecyclerView with custom adapter
      */
     private void generateLaunchList() {
+        // Check if all filters unchecked
+        if (!(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencySpaceX, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyNASA, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyISRO, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyArianespace, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyJAXA, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyROSCOSMOS, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyCASC, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyULA, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyRocketLabLtd, false)
+        )) {
+            // Create handle for the RetrofitInstance interface
+            GetLaunchDataService launchNextService = RetrofitInstance.getRetrofitInstance().create(GetLaunchDataService.class);
 
-        GetLaunchDataService launchNextService = RetrofitInstance.getRetrofitRxInstance().create(GetLaunchDataService.class);
+            // Call the method with parameter in the interface to get the notice data
+            Call<LaunchNextList> launchNextCall = launchNextService.getLaunchNextListData();
 
-        // Observable agencies
-        Observable<LaunchNextList> obs1 = launchNextService.getLaunchNextListDataWithAgency("121");     // SpaceX
-        Observable<LaunchNextList> obs2 = launchNextService.getLaunchNextListDataWithAgency("31");      // ISRO
-        Observable<LaunchNextList> obs3 = launchNextService.getLaunchNextListDataWithAgency("44");      // NASA
+            launchNextCall.enqueue(new Callback<LaunchNextList>() {
+                @Override
+                public void onResponse(Call<LaunchNextList> call, Response<LaunchNextList> response) {
+                    // Set next launch string variable with the next launch time from json response
+                    nextLaunchTimerString = response.body().getLaunches().get(0).getWindowstart();
 
-        Observable<List<LaunchNextList>> result =
-                Observable.zip(
-                        obs1.subscribeOn(Schedulers.io()),
-                        obs2.subscribeOn(Schedulers.io()),
-                        obs3.subscribeOn(Schedulers.io()),
-                        new Function3<LaunchNextList, LaunchNextList, LaunchNextList, List<LaunchNextList>>() {
-                            @Override
-                            public List<LaunchNextList> apply(LaunchNextList type1, LaunchNextList type2, LaunchNextList type3) {
-                                List<LaunchNextList> list = new ArrayList();
-                                list.add(type1);
-                                list.add(type2);
-                                list.add(type3);
-                                return list;
-                            }
-                        });
+                    // Set the Countdown Timer
+                    setCountDownTimer();
 
-        result.observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(new Observer<List<LaunchNextList>>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
+                    // Populate the launch list
+                    finalLaunchNextList.addAll(response.body().getLaunches());
 
+                    //Create ArrayList for Mission List from the launch list
+                    ArrayList<Mission> missionListSorted = new ArrayList<>();
+
+                    for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                        if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
+                            missionListSorted.add(new Mission("TBD", "No Information available"));
+                        }
+                        missionListSorted.addAll(finalLaunchNextList.get(i).getMissions());
                     }
 
-                    @Override
-                    public void onNext(List<LaunchNextList> launchNextLists) {
-                        // Debug Toast
-                        // Toast.makeText(MainActivity.this, String.valueOf(launchNextLists.size()), Toast.LENGTH_LONG).show();
+                    recyclerView = findViewById(R.id.recycler_view_notice_list);
+                    launchNextAdapter = new LaunchNextAdapter(MainActivity.this, response.body().getLaunches(), missionListSorted);
 
-                        for (int i = 0; i < launchNextLists.size(); i++) {
-                            finalLaunchNextList.addAll(launchNextLists.get(i).getLaunches());
+                    // Setup layout manager
+                    LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                    recyclerView.setLayoutManager(layoutManager);
+                    recyclerView.setAdapter(launchNextAdapter);
+                }
+
+                @Override
+                public void onFailure(Call<LaunchNextList> call, Throwable t) {
+                    ArrayList<Launch> launchNextFailureList = new ArrayList<Launch>();
+                    ArrayList<Mission> launchNextMissionFailureList = new ArrayList<>();
+
+                    recyclerView = findViewById(R.id.recycler_view_notice_list);
+                    launchNextAdapter = new LaunchNextAdapter(MainActivity.this, launchNextFailureList, launchNextMissionFailureList);
+
+                    // Setup layout manager
+                    LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                    recyclerView.setLayoutManager(layoutManager);
+                    recyclerView.setAdapter(launchNextAdapter);
+
+                    // Show Toast
+                    Toast.makeText(MainActivity.this,
+                            "Unable to load the list.\nPlease check your connection"
+                            , Toast.LENGTH_LONG).show();
+                }
+            });
+        } // end if
+        else {
+
+            GetLaunchDataService launchNextService = RetrofitInstance.getRetrofitRxInstance().create(GetLaunchDataService.class);
+
+            // Observable agencies
+            Observable<LaunchNextList> obs1 = launchNextService.getLaunchNextListDataWithAgency("121");     // SpaceX
+            Observable<LaunchNextList> obs2 = launchNextService.getLaunchNextListDataWithAgency("31");      // ISRO
+            Observable<LaunchNextList> obs3 = launchNextService.getLaunchNextListDataWithAgency("44");      // NASA
+            Observable<LaunchNextList> obs4 = launchNextService.getLaunchNextListDataWithAgency("115");     // Arianespace
+            Observable<LaunchNextList> obs5 = launchNextService.getLaunchNextListDataWithAgency("37");      // JAXA
+            Observable<LaunchNextList> obs6 = launchNextService.getLaunchNextListDataWithAgency("63");      // ROSCOSMOS
+            Observable<LaunchNextList> obs7 = launchNextService.getLaunchNextListDataWithAgency("88");      // CASC
+            Observable<LaunchNextList> obs8 = launchNextService.getLaunchNextListDataWithAgency("124");     // ULA
+            Observable<LaunchNextList> obs9 = launchNextService.getLaunchNextListDataWithAgency("147");     // Rocketlab Ltd
+
+            // Create observable
+            Observable<List<LaunchNextList>> result =
+                    Observable.zip(
+                            obs1.subscribeOn(Schedulers.io()),
+                            obs2.subscribeOn(Schedulers.io()),
+                            obs3.subscribeOn(Schedulers.io()),
+                            obs4.subscribeOn(Schedulers.io()),
+                            obs5.subscribeOn(Schedulers.io()),
+                            obs6.subscribeOn(Schedulers.io()),
+                            obs7.subscribeOn(Schedulers.io()),
+                            obs8.subscribeOn(Schedulers.io()),
+                            obs9.subscribeOn(Schedulers.io()),
+                            new Function9<LaunchNextList, LaunchNextList, LaunchNextList, LaunchNextList, LaunchNextList, LaunchNextList, LaunchNextList, LaunchNextList, LaunchNextList, List<LaunchNextList>>() {
+                                @Override
+                                public List<LaunchNextList> apply(LaunchNextList launchNextList, LaunchNextList launchNextList2, LaunchNextList launchNextList3, LaunchNextList launchNextList4, LaunchNextList launchNextList5, LaunchNextList launchNextList6, LaunchNextList launchNextList7, LaunchNextList launchNextList8, LaunchNextList launchNextList9) throws Exception {
+                                    List<LaunchNextList> list = new ArrayList<>();
+                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencySpaceX, false))
+                                        list.add(launchNextList);
+                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyNASA, false))
+                                        list.add(launchNextList2);
+                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyISRO, false))
+                                        list.add(launchNextList3);
+                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyArianespace, false))
+                                        list.add(launchNextList4);
+                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyJAXA, false))
+                                        list.add(launchNextList5);
+                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyROSCOSMOS, false))
+                                        list.add(launchNextList6);
+                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyCASC, false))
+                                        list.add(launchNextList7);
+                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyULA, false))
+                                        list.add(launchNextList8);
+                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyRocketLabLtd, false))
+                                        list.add(launchNextList9);
+                                    return list;
+                                }
+                            });
+
+            result.observeOn(AndroidSchedulers.mainThread())
+                    .subscribeWith(new Observer<List<LaunchNextList>>() {
+                        @Override
+                        public void onSubscribe(Disposable d) {
+
                         }
 
-                        // Sort the final launch next list based on date
-                        Collections.sort(finalLaunchNextList, new Comparator<Launch>() {
-                            @Override
-                            public int compare(Launch r1, Launch r2) {
-                                // Get Date from string datetime window start of each launch
-                                Date launchDate1 = convertJSONStringToDate(r1.getWindowstart());
-                                Date launchDate2 = convertJSONStringToDate(r2.getWindowstart());
+                        @Override
+                        public void onNext(List<LaunchNextList> launchNextLists) {
+                            // Debug Toast
+                            // Toast.makeText(MainActivity.this, String.valueOf(launchNextLists.size()), Toast.LENGTH_LONG).show();
 
-                                return launchDate1.compareTo(launchDate2);
+                            for (int i = 0; i < launchNextLists.size(); i++) {
+                                finalLaunchNextList.addAll(launchNextLists.get(i).getLaunches());
                             }
-                        });
 
-                        //Create ArrayList for Mission List
-                        ArrayList<Mission> missionListSorted = new ArrayList<>();
+                            // Sort the final launch next list based on date
+                            Collections.sort(finalLaunchNextList, new Comparator<Launch>() {
+                                @Override
+                                public int compare(Launch r1, Launch r2) {
+                                    // Get Date from string datetime window start of each launch
+                                    Date launchDate1 = convertJSONStringToDate(r1.getWindowstart());
+                                    Date launchDate2 = convertJSONStringToDate(r2.getWindowstart());
 
-                        for (int i = 0; i < finalLaunchNextList.size(); i++) {
-                            if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
-                                missionListSorted.add(new Mission("TBD", "No Information available"));
+                                    return launchDate1.compareTo(launchDate2);
+                                }
+                            });
+
+                            //Create ArrayList for Mission List
+                            ArrayList<Mission> missionListSorted = new ArrayList<>();
+
+                            for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                                if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
+                                    missionListSorted.add(new Mission("TBD", "No Information available"));
+                                }
+                                missionListSorted.addAll(finalLaunchNextList.get(i).getMissions());
                             }
-                            missionListSorted.addAll(finalLaunchNextList.get(i).getMissions());
+
+                            Toast.makeText(MainActivity.this, String.valueOf(missionListSorted.size()), Toast.LENGTH_LONG).show();
+
+                            // Set next launch string variable with the next launch time from json response
+                            nextLaunchTimerString = finalLaunchNextList.get(0).getWindowstart();
+
+
+                            // Set the Countdown Timer
+                            setCountDownTimer();
+
+                            recyclerView = findViewById(R.id.recycler_view_notice_list);
+                            launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
+
+                            // Setup layout manager
+                            LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                            recyclerView.setLayoutManager(layoutManager);
+                            recyclerView.setAdapter(launchNextAdapter);
                         }
 
-                        Toast.makeText(MainActivity.this, String.valueOf(missionListSorted.size()), Toast.LENGTH_LONG).show();
+                        @Override
+                        public void onError(Throwable e) {
 
-                        // Set next launch string variable with the next launch time from json response
-                        nextLaunchTimerString = finalLaunchNextList.get(0).getWindowstart();
+                        }
 
+                        @Override
+                        public void onComplete() {
 
-                        // Set the Countdown Timer
-                        setCountDownTimer();
-
-                        recyclerView = findViewById(R.id.recycler_view_notice_list);
-                        launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
-
-                        // Setup layout manager
-                        LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
-                        recyclerView.setLayoutManager(layoutManager);
-                        recyclerView.setAdapter(launchNextAdapter);
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                });
-
-
-//        // Create handle for the RetrofitInstance interface
-//        GetLaunchDataService launchNextService = RetrofitInstance.getRetrofitInstance().create(GetLaunchDataService.class);
-//
-//        // Call the method with parameter in the interface to get the notice data
-//        Call<LaunchNextList> launchNextCall = launchNextService.getLaunchNextListData();
-//
-//        launchNextCall.enqueue(new Callback<LaunchNextList>() {
-//            @Override
-//            public void onResponse(Call<LaunchNextList> call, Response<LaunchNextList> response) {
-//                // Set next launch string variable with the next launch time from json response
-//                nextLaunchTimerString = response.body().getLaunches().get(0).getWindowstart();
-//
-//                // Set the Countdown Timer
-//                setCountDownTimer();
-//
-//                recyclerView = findViewById(R.id.recycler_view_notice_list);
-//                launchNextAdapter = new LaunchNextAdapter(MainActivity.this, response.body().getLaunches());
-//
-//                // Setup layout manager
-//                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
-//                recyclerView.setLayoutManager(layoutManager);
-//                recyclerView.setAdapter(launchNextAdapter);
-//            }
-//
-//            @Override
-//            public void onFailure(Call<LaunchNextList> call, Throwable t) {
-//                ArrayList<Launch> launchNextFailureList = new ArrayList<Launch>();
-//
-//                recyclerView = findViewById(R.id.recycler_view_notice_list);
-//                launchNextAdapter = new LaunchNextAdapter(MainActivity.this, launchNextFailureList);
-//
-//                // Setup layout manager
-//                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
-//                recyclerView.setLayoutManager(layoutManager);
-//                recyclerView.setAdapter(launchNextAdapter);
-//
-//                // Show Toast
-//                Toast.makeText(MainActivity.this,
-//                        "Unable to load the list.\nPlease check your connection"
-//                        , Toast.LENGTH_LONG).show();
-//            }
-//        });
+                        }
+                    });
+        } // end else
     }
 
     /**
@@ -350,6 +406,7 @@ public class MainActivity extends AppCompatActivity {
                 .withIcon(FontAwesome.Icon.faw_bell)
                 .withSelectable(false);
 
+        // Agency Filter List
         ExpandableDrawerItem itemFilterAgency = new ExpandableDrawerItem()
                 .withIdentifier(2)
                 .withName("Filter by agencies")
@@ -384,15 +441,107 @@ public class MainActivity extends AppCompatActivity {
                                 .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyRocketLabLtd, false))
                                 .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener)
                 );
-        ExpandableDrawerItem itemFilterLocation = new ExpandableDrawerItem()
-                .withIdentifier(3)
-                .withName("Filter by locations")
-                .withIcon(FontAwesome.Icon.faw_globe_americas)
-                .withSelectable(false)
-                .withSubItems(
 
-                );
 
+        // Location Filter List
+//        ExpandableDrawerItem itemFilterLocation = new ExpandableDrawerItem()
+//                .withIdentifier(3)
+//                .withName("Filter by locations")
+//                .withIcon(FontAwesome.Icon.faw_globe_americas)
+//                .withSelectable(false)
+//                .withSubItems(
+//                        new SwitchDrawerItem().withName("Jiuquan, China").withLevel(2).withIdentifier(13)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationJiuquan, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Taiyuan, China").withLevel(2).withIdentifier(14)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationTaiyuan, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Kourou, French Guiana").withLevel(2).withIdentifier(15)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKourou, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Hammaguir, Algeria").withLevel(2).withIdentifier(16)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationHammaguir, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Sriharikota, India").withLevel(2).withIdentifier(17)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSriharikota, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Semnan, Iran").withLevel(2).withIdentifier(18)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSemnan, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Kenya").withLevel(2).withIdentifier(19)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKenya, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Kagoshima, Japan").withLevel(2).withIdentifier(20)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKagoshima, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Tanegashima, Japan").withLevel(2).withIdentifier(21)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationTanegashima, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Baikonur Cosmodrome, Kazakhstan").withLevel(2).withIdentifier(22)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationBaikonur, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Plesetsk Cosmodrome, Russia").withLevel(2).withIdentifier(23)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationPlesetsk, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Kapustin Yar, Russia").withLevel(2).withIdentifier(24)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKapustin, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Svobodney Cosmodrome, Russia").withLevel(2).withIdentifier(25)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSvobodney, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Dombarovskiy, Russia").withLevel(2).withIdentifier(26)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationDombarovskiy, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Sea Launch").withLevel(2).withIdentifier(27)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSea, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Cape Canaveral, USA").withLevel(2).withIdentifier(28)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationCape, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Kennedy Space Center, USA").withLevel(2).withIdentifier(29)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKennedy, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Vandenberg AFB, USA").withLevel(2).withIdentifier(30)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationVandenberg, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Wallops Island, USA").withLevel(2).withIdentifier(31)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWallops, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Woomera, Australia").withLevel(2).withIdentifier(32)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWoomera, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Kiatorete Spit, New Zealand").withLevel(2).withIdentifier(33)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKiatorete, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Xichang, China").withLevel(2).withIdentifier(34)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationXichang, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Negev, Israel").withLevel(2).withIdentifier(35)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationNegev, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Palmachim Airbase, Israel").withLevel(2).withIdentifier(36)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationPalmachim, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Kauai, USA").withLevel(2).withIdentifier(37)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKauai, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Ohae, Korea").withLevel(2).withIdentifier(38)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationOhae, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Naro Space Center, South Korea").withLevel(2).withIdentifier(39)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationNaro, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Kodiak, USA").withLevel(2).withIdentifier(40)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKodiak, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Wenchang, China").withLevel(2).withIdentifier(41)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWenchang, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+//                        new SwitchDrawerItem().withName("Unknown Location").withLevel(2).withIdentifier(42)
+//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationUnknown, false))
+//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener)
+//
+//                );
 
         //create the drawer and remember the `Drawer` result object
         result = new DrawerBuilder()
@@ -407,9 +556,9 @@ public class MainActivity extends AppCompatActivity {
                 .addDrawerItems(
                         itemNotification,
                         new DividerDrawerItem(),
-                        itemFilterAgency,
-                        new DividerDrawerItem(),
-                        itemFilterLocation
+                        itemFilterAgency
+                        //new DividerDrawerItem(),
+                        //itemFilterLocation
                 )
                 .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
@@ -456,8 +605,6 @@ public class MainActivity extends AppCompatActivity {
                 switch (id) {
                     // NASA
                     case 4:
-                        // Debug Toast
-                        Toast.makeText(MainActivity.this, "DrawerItem: " + ((Nameable) drawerItem).getName() + " - toggleChecked: " + isChecked, Toast.LENGTH_SHORT).show();
                         preferencesEditor.putBoolean(GlobalConstants.filterAgencyNASA, isChecked);
                         preferencesEditor.apply();
                         break;
@@ -501,8 +648,162 @@ public class MainActivity extends AppCompatActivity {
                         preferencesEditor.putBoolean(GlobalConstants.filterAgencyRocketLabLtd, isChecked);
                         preferencesEditor.apply();
                         break;
+                    // Jiuquan
+                    case 13:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationJiuquan, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Taiyuan
+                    case 14:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationTaiyuan, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Kourou
+                    case 15:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKourou, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Hammaguir
+                    case 16:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationHammaguir, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Sriharikota
+                    case 17:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSriharikota, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Semnan
+                    case 18:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSemnan, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Kenya
+                    case 19:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKenya, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Kagoshima
+                    case 20:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKagoshima, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Tanegashima
+                    case 21:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationTanegashima, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Baikonur
+                    case 22:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationBaikonur, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Plesetsk
+                    case 23:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationPlesetsk, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Kapustin
+                    case 24:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKapustin, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Svobodney
+                    case 25:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSvobodney, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Dombarovskiy
+                    case 26:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationDombarovskiy, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Sea Launch
+                    case 27:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSea, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Cape
+                    case 28:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationCape, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Kennedy
+                    case 29:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKennedy, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Vandenberg
+                    case 30:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationVandenberg, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Wallops
+                    case 31:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationWallops, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Woomera
+                    case 32:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationWoomera, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Kiatorete
+                    case 33:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKiatorete, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Xichang
+                    case 34:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationXichang, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Negev
+                    case 35:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationNegev, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Palmachim
+                    case 36:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationPalmachim, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Kauai
+                    case 37:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKauai, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Ohae
+                    case 38:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationOhae, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Naro
+                    case 39:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationNaro, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Kodiak
+                    case 40:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKodiak, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Wenchang
+                    case 41:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationWenchang, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    // Unknown
+                    case 42:
+                        preferencesEditor.putBoolean(GlobalConstants.filterLocationUnknown, isChecked);
+                        preferencesEditor.apply();
+                        break;
+                    default:
+                        break;
+                } // end switch case
 
-                }
+                // Debug Toast
+                Toast.makeText(MainActivity.this, "DrawerItem: " + ((Nameable) drawerItem).getName() + " - toggleChecked: " + isChecked, Toast.LENGTH_SHORT).show();
 
             } else {
                 Log.i("material-drawer", "toggleChecked: " + isChecked);
@@ -514,78 +815,226 @@ public class MainActivity extends AppCompatActivity {
      * Sets up a SwipeRefreshLayout.OnRefreshListener and Refresh signal colors that is invoked when the user
      * performs a swipe-to-refresh gesture.
      */
-//    private void setRocketSwipeRefreshLayout() {
-//        launchSwipeRefreshLayout.setOnRefreshListener(
-//                new SwipeRefreshLayout.OnRefreshListener() {
-//                    @Override
-//                    public void onRefresh() {
-//                        // Your code to refresh the list here.
-//                        // Make sure you call swipeContainer.setRefreshing(false)
-//                        // once the network request has completed successfully.
-//                        // Create handle for the RetrofitInstance interface
-//                        GetLaunchDataService launchNextService = RetrofitInstance.getRetrofitInstance().create(GetLaunchDataService.class);
-//
-//                        // Call the method with parameter in the interface to get the notice data
-//                        Call<LaunchNextList> launchNextCall = launchNextService.getLaunchNextListData();
-//
-//                        launchNextCall.enqueue(new Callback<LaunchNextList>() {
-//                            @Override
-//                            public void onResponse(Call<LaunchNextList> call, Response<LaunchNextList> response) {
-//                                // Clear the rocketList to avoid duplication, if the rocket list has already populated
-//                                launchNextAdapter.clear();
-//
-//                                // Set next launch string variable with the next launch time from json response
-//                                nextLaunchTimerString = response.body().getLaunches().get(0).getWindowstart();
-//
-//                                // Set the Countdown Timer
-//                                setCountDownTimer();
-//
-//                                recyclerView = findViewById(R.id.recycler_view_notice_list);
-//                                launchNextAdapter = new LaunchNextAdapter(MainActivity.this, response.body().getLaunches());
-//
-//                                // Setup layout manager
-//                                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
-//                                recyclerView.setLayoutManager(layoutManager);
-//                                recyclerView.setAdapter(launchNextAdapter);
-//
-//                                // Remove the refresh signal after finished
-//                                launchSwipeRefreshLayout.setRefreshing(false);
-//                            }
-//
-//                            @Override
-//                            public void onFailure(Call<LaunchNextList> call, Throwable t) {
-//                                // Clear the rocketList to avoid duplication, if the rocket list has already populated
-//                                launchNextAdapter.clear();
-//
-//                                ArrayList<Launch> launchNextFailureList = new ArrayList<Launch>();
-//
-//                                recyclerView = findViewById(R.id.recycler_view_notice_list);
-//                                launchNextAdapter = new LaunchNextAdapter(MainActivity.this, launchNextFailureList);
-//
-//                                // Setup layout manager
-//                                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
-//                                recyclerView.setLayoutManager(layoutManager);
-//                                recyclerView.setAdapter(launchNextAdapter);
-//
-//                                // Show Toast
-//                                Toast.makeText(MainActivity.this,
-//                                        "Unable to load the list.\nPlease check your connection"
-//                                        , Toast.LENGTH_LONG).show();
-//
-//                                // Remove the refresh signal after finished
-//                                launchSwipeRefreshLayout.setRefreshing(false);
-//                            }
-//                        });
-//                    }
-//                }
-//        );
-//
-//        // Scheme colors for animation
-//        launchSwipeRefreshLayout.setColorSchemeColors(
-//                getResources().getColor(R.color.secondaryLightColor)
-//        );
-//
-//    }
+    private void setRocketSwipeRefreshLayout() {
+        launchSwipeRefreshLayout.setOnRefreshListener(
+                new SwipeRefreshLayout.OnRefreshListener() {
+                    @Override
+                    public void onRefresh() {
+                        // Clear the launch list first to avoid duplication
+                        finalLaunchNextList.clear();
+
+                        // Check if all filters unchecked
+                        if (!(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencySpaceX, false) ||
+                                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyNASA, false) ||
+                                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyISRO, false) ||
+                                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyArianespace, false) ||
+                                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyJAXA, false) ||
+                                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyROSCOSMOS, false) ||
+                                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyCASC, false) ||
+                                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyULA, false) ||
+                                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyRocketLabLtd, false)
+                        )) {
+                            // Create handle for the RetrofitInstance interface
+                            GetLaunchDataService launchNextService = RetrofitInstance.getRetrofitInstance().create(GetLaunchDataService.class);
+
+                            // Call the method with parameter in the interface to get the notice data
+                            Call<LaunchNextList> launchNextCall = launchNextService.getLaunchNextListData();
+
+                            launchNextCall.enqueue(new Callback<LaunchNextList>() {
+                                @Override
+                                public void onResponse(Call<LaunchNextList> call, Response<LaunchNextList> response) {
+                                    // Set next launch string variable with the next launch time from json response
+                                    nextLaunchTimerString = response.body().getLaunches().get(0).getWindowstart();
+
+                                    // Set the Countdown Timer
+                                    setCountDownTimer();
+
+                                    // Populate the launch list
+                                    finalLaunchNextList.addAll(response.body().getLaunches());
+
+                                    //Create ArrayList for Mission List from the launch list
+                                    ArrayList<Mission> missionListSorted = new ArrayList<>();
+
+                                    for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                                        if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
+                                            missionListSorted.add(new Mission("TBD", "No Information available"));
+                                        }
+                                        missionListSorted.addAll(finalLaunchNextList.get(i).getMissions());
+                                    }
+
+                                    recyclerView = findViewById(R.id.recycler_view_notice_list);
+                                    launchNextAdapter = new LaunchNextAdapter(MainActivity.this, response.body().getLaunches(), missionListSorted);
+
+                                    // Setup layout manager
+                                    LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                                    recyclerView.setLayoutManager(layoutManager);
+                                    recyclerView.setAdapter(launchNextAdapter);
+
+                                    // Remove refresh button when done
+                                    launchSwipeRefreshLayout.setRefreshing(false);
+                                }
+
+                                @Override
+                                public void onFailure(Call<LaunchNextList> call, Throwable t) {
+                                    ArrayList<Launch> launchNextFailureList = new ArrayList<Launch>();
+                                    ArrayList<Mission> launchNextMissionFailureList = new ArrayList<>();
+
+                                    recyclerView = findViewById(R.id.recycler_view_notice_list);
+                                    launchNextAdapter = new LaunchNextAdapter(MainActivity.this, launchNextFailureList, launchNextMissionFailureList);
+
+                                    // Setup layout manager
+                                    LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                                    recyclerView.setLayoutManager(layoutManager);
+                                    recyclerView.setAdapter(launchNextAdapter);
+
+                                    // Show Toast
+                                    Toast.makeText(MainActivity.this,
+                                            "Unable to load the list.\nPlease check your connection"
+                                            , Toast.LENGTH_LONG).show();
+
+                                    // Remove refresh button when done
+                                    launchSwipeRefreshLayout.setRefreshing(false);
+                                }
+                            });
+                        } // end if
+                        else {
+                            GetLaunchDataService launchNextService = RetrofitInstance.getRetrofitRxInstance().create(GetLaunchDataService.class);
+
+                            // Observable agencies
+                            Observable<LaunchNextList> obs1 = launchNextService.getLaunchNextListDataWithAgency("121");     // SpaceX
+                            Observable<LaunchNextList> obs2 = launchNextService.getLaunchNextListDataWithAgency("31");      // ISRO
+                            Observable<LaunchNextList> obs3 = launchNextService.getLaunchNextListDataWithAgency("44");      // NASA
+                            Observable<LaunchNextList> obs4 = launchNextService.getLaunchNextListDataWithAgency("115");     // Arianespace
+                            Observable<LaunchNextList> obs5 = launchNextService.getLaunchNextListDataWithAgency("37");      // JAXA
+                            Observable<LaunchNextList> obs6 = launchNextService.getLaunchNextListDataWithAgency("63");      // ROSCOSMOS
+                            Observable<LaunchNextList> obs7 = launchNextService.getLaunchNextListDataWithAgency("88");      // CASC
+                            Observable<LaunchNextList> obs8 = launchNextService.getLaunchNextListDataWithAgency("124");     // ULA
+                            Observable<LaunchNextList> obs9 = launchNextService.getLaunchNextListDataWithAgency("147");     // Rocketlab Ltd
+
+                            // Create observable
+                            Observable<List<LaunchNextList>> result =
+                                    Observable.zip(
+                                            obs1.subscribeOn(Schedulers.io()),
+                                            obs2.subscribeOn(Schedulers.io()),
+                                            obs3.subscribeOn(Schedulers.io()),
+                                            obs4.subscribeOn(Schedulers.io()),
+                                            obs5.subscribeOn(Schedulers.io()),
+                                            obs6.subscribeOn(Schedulers.io()),
+                                            obs7.subscribeOn(Schedulers.io()),
+                                            obs8.subscribeOn(Schedulers.io()),
+                                            obs9.subscribeOn(Schedulers.io()),
+                                            new Function9<LaunchNextList, LaunchNextList, LaunchNextList, LaunchNextList, LaunchNextList, LaunchNextList, LaunchNextList, LaunchNextList, LaunchNextList, List<LaunchNextList>>() {
+                                                @Override
+                                                public List<LaunchNextList> apply(LaunchNextList launchNextList, LaunchNextList launchNextList2, LaunchNextList launchNextList3, LaunchNextList launchNextList4, LaunchNextList launchNextList5, LaunchNextList launchNextList6, LaunchNextList launchNextList7, LaunchNextList launchNextList8, LaunchNextList launchNextList9) throws Exception {
+                                                    List<LaunchNextList> list = new ArrayList<>();
+                                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencySpaceX, false))
+                                                        list.add(launchNextList);
+                                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyNASA, false))
+                                                        list.add(launchNextList2);
+                                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyISRO, false))
+                                                        list.add(launchNextList3);
+                                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyArianespace, false))
+                                                        list.add(launchNextList4);
+                                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyJAXA, false))
+                                                        list.add(launchNextList5);
+                                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyROSCOSMOS, false))
+                                                        list.add(launchNextList6);
+                                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyCASC, false))
+                                                        list.add(launchNextList7);
+                                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyULA, false))
+                                                        list.add(launchNextList8);
+                                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyRocketLabLtd, false))
+                                                        list.add(launchNextList9);
+                                                    return list;
+                                                }
+                                            });
+
+                            result.observeOn(AndroidSchedulers.mainThread())
+                                    .subscribeWith(new Observer<List<LaunchNextList>>() {
+                                        @Override
+                                        public void onSubscribe(Disposable d) {
+
+                                        }
+
+                                        @Override
+                                        public void onNext(List<LaunchNextList> launchNextLists) {
+                                            // Debug Toast
+                                            // Toast.makeText(MainActivity.this, String.valueOf(launchNextLists.size()), Toast.LENGTH_LONG).show();
+
+                                            for (int i = 0; i < launchNextLists.size(); i++) {
+                                                finalLaunchNextList.addAll(launchNextLists.get(i).getLaunches());
+                                            }
+
+                                            // Sort the final launch next list based on date
+                                            Collections.sort(finalLaunchNextList, new Comparator<Launch>() {
+                                                @Override
+                                                public int compare(Launch r1, Launch r2) {
+                                                    // Get Date from string datetime window start of each launch
+                                                    Date launchDate1 = convertJSONStringToDate(r1.getWindowstart());
+                                                    Date launchDate2 = convertJSONStringToDate(r2.getWindowstart());
+
+                                                    return launchDate1.compareTo(launchDate2);
+                                                }
+                                            });
+
+                                            //Create ArrayList for Mission List
+                                            ArrayList<Mission> missionListSorted = new ArrayList<>();
+
+                                            for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                                                if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
+                                                    missionListSorted.add(new Mission("TBD", "No Information available"));
+                                                }
+                                                missionListSorted.addAll(finalLaunchNextList.get(i).getMissions());
+                                            }
+
+                                            Toast.makeText(MainActivity.this, String.valueOf(missionListSorted.size()), Toast.LENGTH_LONG).show();
+
+                                            // Set next launch string variable with the next launch time from json response
+                                            nextLaunchTimerString = finalLaunchNextList.get(0).getWindowstart();
+
+
+                                            // Set the Countdown Timer
+                                            setCountDownTimer();
+
+                                            recyclerView = findViewById(R.id.recycler_view_notice_list);
+                                            launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
+
+                                            // Setup layout manager
+                                            LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                                            recyclerView.setLayoutManager(layoutManager);
+                                            recyclerView.setAdapter(launchNextAdapter);
+
+                                            // Remove refresh button when done
+                                            launchSwipeRefreshLayout.setRefreshing(false);
+                                        }
+
+                                        @Override
+                                        public void onError(Throwable e) {
+                                            // Remove refresh button when done
+                                            launchSwipeRefreshLayout.setRefreshing(false);
+
+                                            // Show Toast
+                                            Toast.makeText(MainActivity.this,
+                                                    "Unable to load the list.\nPlease check your connection"
+                                                    , Toast.LENGTH_LONG).show();
+                                        }
+
+                                        @Override
+                                        public void onComplete() {
+
+                                        }
+                                    });
+                        } // end else
+                    }
+                }
+        );
+
+        // Scheme colors for animation
+        launchSwipeRefreshLayout.setColorSchemeColors(
+                getResources().getColor(R.color.secondaryLightColor)
+        );
+
+    }
 
     /**
      * This method sets the countdown timer for the launch
@@ -652,49 +1101,6 @@ public class MainActivity extends AppCompatActivity {
         return dateResult;
     }
 
-    /**
-     * This methods applies values inside of SettingsFilter in MainActivity
-     */
-    private void applySettingsFilter() {
-        // Save the default values in shared preferences for Settings & Filter
-        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-
-        // Gets default value of shared preferences
-//        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-//        // Value of notification switch
-//        notificationSwitchPref = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_NOTIFICATION_SWITCH, false);
-//
-//        // Value of filter NASA
-//        GlobalConstants.filterAgencyNASA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_NASA_CHECKBOX, false);
-//
-//        // Value of filter SpaceX
-//        filterAgencySpaceX = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_SPACEX_CHECKBOX, false);
-//
-//        // Value of filter ULA
-//        filterAgencyULA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ULA_CHECKBOX, false);
-//
-//        // Value of filter ROSCOSMOS
-//        filterAgencyROSCOSMOS = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ROSCOSMOS_CHECKBOX, false);
-//
-//        // Value of filter JAXA
-//        filterAgencyJAXA = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_JAXA_CHECKBOX, false);
-//
-//        // Value of filter Arianespace
-//        filterAgencyArianespace = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ARIANESPACE_CHECKBOX, false);
-//
-//        // Value of filter CASC
-//        filterAgencyCASC = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_CASC_CHECKBOX, false);
-//
-//        // Value of filter ISRO
-//        filterAgencyISRO = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ISRO_CHECKBOX, false);
-//
-//        // Value of filter RocketLabLtd
-//        filterAgencyRocketLabLtd = sharedPreferences.getBoolean(SettingsFilterActivity.KEY_PREF_FILTER_ROCKETLABLTD_CHECKBOX, false);
-
-        // Debug Toast
-        // Toast.makeText(this, filterAgencyAll.toString(), Toast.LENGTH_LONG).show();
-    }
 
 
 }
