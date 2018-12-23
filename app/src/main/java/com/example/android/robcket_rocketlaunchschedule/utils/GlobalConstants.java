@@ -91,6 +91,71 @@ public final class GlobalConstants {
      * 33   : Wenchang Satellite Launch Center, People's Republic of China
      * 37   : Unknown Location
      */
+    // Id for all locations
+    public static String allLocationIdString = "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,24,25,26,27,28,29,31,32,33,37";
+
+    // Value of filter Jiuquan
+    public static String filterLocationJiuquan = "FILTER_LOCATION_JIUQUAN_PREF_KEY";
+    // Value of filter Taiyuan
+    public static String filterLocationTaiyuan = "FILTER_LOCATION_TAIYUAN_PREF_KEY";
+    // Value of filter Kourou
+    public static String filterLocationKourou = "FILTER_LOCATION_KOUROU_PREF_KEY";
+    // Value of filter Hammaguir
+    public static String filterLocationHammaguir = "FILTER_LOCATION_HAMMAGUIR_PREF_KEY";
+    // Value of filter Sriharikota
+    public static String filterLocationSriharikota = "FILTER_LOCATION_SRIHARIKOTA_PREF_KEY";
+    // Value of filter Semnan
+    public static String filterLocationSemnan = "FILTER_LOCATION_SEMNAN_PREF_KEY";
+    // Value of filter Kenya
+    public static String filterLocationKenya = "FILTER_LOCATION_KENYA_PREF_KEY";
+    // Value of filter Kagoshima
+    public static String filterLocationKagoshima = "FILTER_LOCATION_KAGOSHIMA_PREF_KEY";
+    // Value of filter Tanegashima
+    public static String filterLocationTanegashima = "FILTER_LOCATION_TANEGASHIMA_PREF_KEY";
+    // Value of filter Baikonur Cosmodrome
+    public static String filterLocationBaikonur = "FILTER_LOCATION_BAIKONUR_PREF_KEY";
+    // Value of filter Plesetsk Cosmodrome
+    public static String filterLocationPlesetsk = "FILTER_LOCATION_PLESETSK_PREF_KEY";
+    // Value of filter Kapustin Yar
+    public static String filterLocationKapustin = "FILTER_LOCATION_KAPUSTIN_PREF_KEY";
+    // Value of filter Svobodney Cosmodrome
+    public static String filterLocationSvobodney = "FILTER_LOCATION_SVOBODNEY_PREF_KEY";
+    // Value of filter Dombarovskiy
+    public static String filterLocationDombarovskiy = "FILTER_LOCATION_DOMBAROVSKY_PREF_KEY";
+    // Value of filter Sea Launch
+    public static String filterLocationSea = "FILTER_LOCATION_SEALAUNCH_PREF_KEY";
+    // Value of filter Cape canaveral
+    public static String filterLocationCape = "FILTER_LOCATION_CAPE_PREF_KEY";
+    // Value of filter Kennedy Space Center
+    public static String filterLocationKennedy = "FILTER_LOCATION_KENNEDY_PREF_KEY";
+    // Value of filter Vandenberg AFB
+    public static String filterLocationVandenberg = "FILTER_LOCATION_VANDENBERG_PREF_KEY";
+    // Value of filter Wallops
+    public static String filterLocationWallops = "FILTER_LOCATION_WALLOPS_PREF_KEY";
+    // Value of filter Woomera
+    public static String filterLocationWoomera = "FILTER_LOCATION_WOOMERA_PREF_KEY";
+    // Value of filter Kiatorete Spit
+    public static String filterLocationKiatorete = "FILTER_LOCATION_KIATORETE_PREF_KEY";
+    // Value of filter Xichang Satellite Launch Center
+    public static String filterLocationXichang = "FILTER_LOCATION_XICHANG_PREF_KEY";
+    // Value of filter Negev, State of Israel
+    public static String filterLocationNegev = "FILTER_LOCATION_NEGEV_PREF_KEY";
+    // Value of filter Palmachim Airbase
+    public static String filterLocationPalmachim = "FILTER_LOCATION_PALMACHIM_PREF_KEY";
+    // Value of filter Kauai
+    public static String filterLocationKauai = "FILTER_LOCATION_KAUAI_PREF_KEY";
+    // Value of filter Ohae Satellite Launching station
+    public static String filterLocationOhae = "FILTER_LOCATION_OHAE_PREF_KEY";
+    // Value of filter Naro Space Center
+    public static String filterLocationNaro = "FILTER_LOCATION_NARO_PREF_KEY";
+    // Value of filter Kodiak Launch Complex
+    public static String filterLocationKodiak= "FILTER_LOCATION_KODIAK_PREF_KEY";
+    // Value of filter Wenchang Satellite Launch Center
+    public static String filterLocationWenchang= "FILTER_LOCATION_WENCHANG_PREF_KEY";
+    // Value of filter Unknown Location
+    public static String filterLocationUnkown = "FILTER_LOCATION_UNKNOWN_PREF_KEY";
+
+
 
     private GlobalConstants(){
 
