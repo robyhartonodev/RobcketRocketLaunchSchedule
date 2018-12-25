@@ -1,5 +1,6 @@
 package com.example.android.robcket_rocketlaunchschedule.activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -16,6 +17,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
@@ -64,6 +66,7 @@ import java.util.concurrent.TimeUnit;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
+import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function3;
@@ -85,9 +88,10 @@ public class MainActivity extends AppCompatActivity {
     private String nextLaunchTimerString;
 
     private ArrayList<Launch> finalLaunchNextList = new ArrayList<>();
+    private ArrayList<Mission> missionListSorted = new ArrayList<>();
 
     private SharedPreferences filterSettingsSharedPreferences;
-    private SharedPreferences.Editor preferencesEditor;
+    // private SharedPreferences.Editor preferencesEditor;
 
 
     @Override
@@ -107,7 +111,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Shared Preferences setup
         filterSettingsSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        preferencesEditor = filterSettingsSharedPreferences.edit();
+        // filterSettingsSharedPreferences = getActivity().getPreferences(Context.MODE_PRIVATE);
+
+        // applySettingsFilter();
 
         // Set Next Launch Timer TextView
         nextLaunchTimerTextView = findViewById(R.id.textview_next_launch_timer);
@@ -147,10 +153,10 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         if (result != null && result.isDrawerOpen()) {
             result.closeDrawer();
-            // Recreate activity with saved settings
-            Intent intent = getIntent();
+            // Recreate activity, override blank screen animation
             finish();
-            startActivity(intent);
+            overridePendingTransition(0, 0);
+            startActivity(getIntent());
         } else {
             super.onBackPressed();
         }
@@ -180,6 +186,10 @@ public class MainActivity extends AppCompatActivity {
      * Method to generate List of notice using RecyclerView with custom adapter
      */
     private void generateLaunchList() {
+        // Clear the launch list first to avoid duplication
+        finalLaunchNextList.clear();
+        missionListSorted.clear();
+
         // Check if all filters unchecked
         if (!(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencySpaceX, false) ||
                 filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyNASA, false) ||
@@ -209,9 +219,6 @@ public class MainActivity extends AppCompatActivity {
                     // Populate the launch list
                     finalLaunchNextList.addAll(response.body().getLaunches());
 
-                    //Create ArrayList for Mission List from the launch list
-                    ArrayList<Mission> missionListSorted = new ArrayList<>();
-
                     for (int i = 0; i < finalLaunchNextList.size(); i++) {
                         if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
                             missionListSorted.add(new Mission("TBD", "No Information available"));
@@ -223,7 +230,8 @@ public class MainActivity extends AppCompatActivity {
                     launchNextAdapter = new LaunchNextAdapter(MainActivity.this, response.body().getLaunches(), missionListSorted);
 
                     // Setup layout manager
-                    LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                    int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
+                    LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
                     recyclerView.setLayoutManager(layoutManager);
                     recyclerView.setAdapter(launchNextAdapter);
                 }
@@ -237,7 +245,8 @@ public class MainActivity extends AppCompatActivity {
                     launchNextAdapter = new LaunchNextAdapter(MainActivity.this, launchNextFailureList, launchNextMissionFailureList);
 
                     // Setup layout manager
-                    LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                    int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
+                    LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
                     recyclerView.setLayoutManager(layoutManager);
                     recyclerView.setAdapter(launchNextAdapter);
 
@@ -281,9 +290,9 @@ public class MainActivity extends AppCompatActivity {
                                     List<LaunchNextList> list = new ArrayList<>();
                                     if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencySpaceX, false))
                                         list.add(launchNextList);
-                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyNASA, false))
-                                        list.add(launchNextList2);
                                     if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyISRO, false))
+                                        list.add(launchNextList2);
+                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyNASA, false))
                                         list.add(launchNextList3);
                                     if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencyArianespace, false))
                                         list.add(launchNextList4);
@@ -329,9 +338,6 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             });
 
-                            //Create ArrayList for Mission List
-                            ArrayList<Mission> missionListSorted = new ArrayList<>();
-
                             for (int i = 0; i < finalLaunchNextList.size(); i++) {
                                 if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
                                     missionListSorted.add(new Mission("TBD", "No Information available"));
@@ -352,14 +358,18 @@ public class MainActivity extends AppCompatActivity {
                             launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
 
                             // Setup layout manager
-                            LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                            int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
+                            LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
                             recyclerView.setLayoutManager(layoutManager);
                             recyclerView.setAdapter(launchNextAdapter);
                         }
 
                         @Override
                         public void onError(Throwable e) {
-
+                            // Show Toast
+                            Toast.makeText(MainActivity.this,
+                                    "Unable to load the list.\nPlease check your connection"
+                                    , Toast.LENGTH_LONG).show();
                         }
 
                         @Override
@@ -605,205 +615,196 @@ public class MainActivity extends AppCompatActivity {
                 switch (id) {
                     // NASA
                     case 4:
-                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyNASA, isChecked);
-                        preferencesEditor.apply();
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterAgencyNASA, isChecked).apply();
                         break;
                     // SpaceX
                     case 5:
-                        preferencesEditor.putBoolean(GlobalConstants.filterAgencySpaceX, isChecked);
-                        preferencesEditor.apply();
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterAgencySpaceX, isChecked).apply();
                         break;
                     // ISRO
                     case 6:
-                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyISRO, isChecked);
-                        preferencesEditor.apply();
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterAgencyISRO, isChecked).apply();
                         break;
                     // Arianespace
                     case 7:
-                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyNASA, isChecked);
-                        preferencesEditor.apply();
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterAgencyArianespace, isChecked).apply();
                         break;
                     // JAXA
                     case 8:
-                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyJAXA, isChecked);
-                        preferencesEditor.apply();
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterAgencyJAXA, isChecked).apply();
                         break;
                     // ROSCOSMOS
                     case 9:
-                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyROSCOSMOS, isChecked);
-                        preferencesEditor.apply();
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterAgencyROSCOSMOS, isChecked).apply();
                         break;
                     // CASC
                     case 10:
-                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyCASC, isChecked);
-                        preferencesEditor.apply();
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterAgencyCASC, isChecked).apply();
                         break;
                     // ULA
                     case 11:
-                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyULA, isChecked);
-                        preferencesEditor.apply();
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterAgencyULA, isChecked).apply();
                         break;
                     // RocketLab Ltd
                     case 12:
-                        preferencesEditor.putBoolean(GlobalConstants.filterAgencyRocketLabLtd, isChecked);
-                        preferencesEditor.apply();
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterAgencyRocketLabLtd, isChecked).apply();
                         break;
-                    // Jiuquan
-                    case 13:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationJiuquan, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Taiyuan
-                    case 14:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationTaiyuan, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Kourou
-                    case 15:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKourou, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Hammaguir
-                    case 16:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationHammaguir, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Sriharikota
-                    case 17:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSriharikota, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Semnan
-                    case 18:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSemnan, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Kenya
-                    case 19:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKenya, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Kagoshima
-                    case 20:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKagoshima, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Tanegashima
-                    case 21:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationTanegashima, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Baikonur
-                    case 22:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationBaikonur, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Plesetsk
-                    case 23:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationPlesetsk, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Kapustin
-                    case 24:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKapustin, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Svobodney
-                    case 25:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSvobodney, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Dombarovskiy
-                    case 26:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationDombarovskiy, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Sea Launch
-                    case 27:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSea, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Cape
-                    case 28:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationCape, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Kennedy
-                    case 29:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKennedy, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Vandenberg
-                    case 30:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationVandenberg, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Wallops
-                    case 31:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationWallops, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Woomera
-                    case 32:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationWoomera, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Kiatorete
-                    case 33:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKiatorete, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Xichang
-                    case 34:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationXichang, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Negev
-                    case 35:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationNegev, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Palmachim
-                    case 36:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationPalmachim, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Kauai
-                    case 37:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKauai, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Ohae
-                    case 38:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationOhae, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Naro
-                    case 39:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationNaro, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Kodiak
-                    case 40:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKodiak, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Wenchang
-                    case 41:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationWenchang, isChecked);
-                        preferencesEditor.apply();
-                        break;
-                    // Unknown
-                    case 42:
-                        preferencesEditor.putBoolean(GlobalConstants.filterLocationUnknown, isChecked);
-                        preferencesEditor.apply();
-                        break;
+//                    // Jiuquan
+//                    case 13:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationJiuquan, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Taiyuan
+//                    case 14:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationTaiyuan, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Kourou
+//                    case 15:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKourou, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Hammaguir
+//                    case 16:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationHammaguir, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Sriharikota
+//                    case 17:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSriharikota, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Semnan
+//                    case 18:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSemnan, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Kenya
+//                    case 19:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKenya, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Kagoshima
+//                    case 20:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKagoshima, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Tanegashima
+//                    case 21:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationTanegashima, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Baikonur
+//                    case 22:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationBaikonur, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Plesetsk
+//                    case 23:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationPlesetsk, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Kapustin
+//                    case 24:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKapustin, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Svobodney
+//                    case 25:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSvobodney, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Dombarovskiy
+//                    case 26:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationDombarovskiy, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Sea Launch
+//                    case 27:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSea, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Cape
+//                    case 28:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationCape, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Kennedy
+//                    case 29:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKennedy, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Vandenberg
+//                    case 30:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationVandenberg, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Wallops
+//                    case 31:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationWallops, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Woomera
+//                    case 32:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationWoomera, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Kiatorete
+//                    case 33:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKiatorete, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Xichang
+//                    case 34:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationXichang, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Negev
+//                    case 35:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationNegev, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Palmachim
+//                    case 36:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationPalmachim, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Kauai
+//                    case 37:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKauai, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Ohae
+//                    case 38:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationOhae, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Naro
+//                    case 39:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationNaro, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Kodiak
+//                    case 40:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKodiak, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Wenchang
+//                    case 41:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationWenchang, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
+//                    // Unknown
+//                    case 42:
+//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationUnknown, isChecked);
+//                        preferencesEditor.apply();
+//                        break;
                     default:
                         break;
                 } // end switch case
 
                 // Debug Toast
-                Toast.makeText(MainActivity.this, "DrawerItem: " + ((Nameable) drawerItem).getName() + " - toggleChecked: " + isChecked, Toast.LENGTH_SHORT).show();
+                // Toast.makeText(MainActivity.this, "DrawerItem: " + ((Nameable) drawerItem).getName() + " - toggleChecked: " + isChecked, Toast.LENGTH_SHORT).show();
 
             } else {
                 Log.i("material-drawer", "toggleChecked: " + isChecked);
@@ -822,6 +823,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onRefresh() {
                         // Clear the launch list first to avoid duplication
                         finalLaunchNextList.clear();
+                        missionListSorted.clear();
 
                         // Check if all filters unchecked
                         if (!(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterAgencySpaceX, false) ||
@@ -852,9 +854,6 @@ public class MainActivity extends AppCompatActivity {
                                     // Populate the launch list
                                     finalLaunchNextList.addAll(response.body().getLaunches());
 
-                                    //Create ArrayList for Mission List from the launch list
-                                    ArrayList<Mission> missionListSorted = new ArrayList<>();
-
                                     for (int i = 0; i < finalLaunchNextList.size(); i++) {
                                         if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
                                             missionListSorted.add(new Mission("TBD", "No Information available"));
@@ -866,7 +865,8 @@ public class MainActivity extends AppCompatActivity {
                                     launchNextAdapter = new LaunchNextAdapter(MainActivity.this, response.body().getLaunches(), missionListSorted);
 
                                     // Setup layout manager
-                                    LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                                    int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
+                                    LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
                                     recyclerView.setLayoutManager(layoutManager);
                                     recyclerView.setAdapter(launchNextAdapter);
 
@@ -883,7 +883,8 @@ public class MainActivity extends AppCompatActivity {
                                     launchNextAdapter = new LaunchNextAdapter(MainActivity.this, launchNextFailureList, launchNextMissionFailureList);
 
                                     // Setup layout manager
-                                    LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                                    int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
+                                    LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
                                     recyclerView.setLayoutManager(layoutManager);
                                     recyclerView.setAdapter(launchNextAdapter);
 
@@ -977,9 +978,6 @@ public class MainActivity extends AppCompatActivity {
                                                 }
                                             });
 
-                                            //Create ArrayList for Mission List
-                                            ArrayList<Mission> missionListSorted = new ArrayList<>();
-
                                             for (int i = 0; i < finalLaunchNextList.size(); i++) {
                                                 if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
                                                     missionListSorted.add(new Mission("TBD", "No Information available"));
@@ -1000,7 +998,8 @@ public class MainActivity extends AppCompatActivity {
                                             launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
 
                                             // Setup layout manager
-                                            LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+                                            int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
+                                            LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
                                             recyclerView.setLayoutManager(layoutManager);
                                             recyclerView.setAdapter(launchNextAdapter);
 
@@ -1100,7 +1099,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return dateResult;
     }
-
 
 
 }
