@@ -1,8 +1,14 @@
 package com.example.android.robcket_rocketlaunchschedule.activity;
 
+import android.app.AlarmManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -11,6 +17,7 @@ import com.example.android.robcket_rocketlaunchschedule.model.Launch;
 import com.example.android.robcket_rocketlaunchschedule.model.LaunchNextList;
 import com.example.android.robcket_rocketlaunchschedule.model.Mission;
 import com.example.android.robcket_rocketlaunchschedule.my_interface.GetLaunchDataService;
+import com.example.android.robcket_rocketlaunchschedule.receiver.AlarmReceiver;
 import com.example.android.robcket_rocketlaunchschedule.utils.GlobalConstants;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -23,6 +30,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
 
 import android.os.CountDownTimer;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -42,11 +50,8 @@ import com.mikepenz.materialdrawer.DrawerBuilder;
 import com.mikepenz.materialdrawer.interfaces.OnCheckedChangeListener;
 import com.mikepenz.materialdrawer.model.DividerDrawerItem;
 import com.mikepenz.materialdrawer.model.ExpandableDrawerItem;
-import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem;
-import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 import com.mikepenz.materialdrawer.model.SwitchDrawerItem;
-import com.mikepenz.materialdrawer.model.ToggleDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
@@ -66,10 +71,8 @@ import java.util.concurrent.TimeUnit;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
-import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Function3;
 import io.reactivex.functions.Function9;
 import io.reactivex.schedulers.Schedulers;
 import retrofit2.Call;
@@ -91,8 +94,16 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Mission> missionListSorted = new ArrayList<>();
 
     private SharedPreferences filterSettingsSharedPreferences;
-    // private SharedPreferences.Editor preferencesEditor;
 
+
+    // Notification related variables
+
+    // Notification ID.
+    private static final int NOTIFICATION_ID = 0;
+    // Notification channel ID.
+    private static final String PRIMARY_CHANNEL_ID =
+            "primary_notification_channel";
+    private NotificationManager mNotificationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,9 +122,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Shared Preferences setup
         filterSettingsSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        // filterSettingsSharedPreferences = getActivity().getPreferences(Context.MODE_PRIVATE);
-
-        // applySettingsFilter();
 
         // Set Next Launch Timer TextView
         nextLaunchTimerTextView = findViewById(R.id.textview_next_launch_timer);
@@ -133,6 +141,12 @@ public class MainActivity extends AppCompatActivity {
 
         // Set the Navigation Drawer
         setNavigationDrawer(toolbar);
+
+        // Set the Notification Function
+        // setNextLaunchNotification();
+
+        // Create Notification Channel for Oreo (API >= 27)
+        createNotificationChannel();
     }
 
 
@@ -216,6 +230,9 @@ public class MainActivity extends AppCompatActivity {
                     // Set the Countdown Timer
                     setCountDownTimer();
 
+                    // Set the Notification Function
+                    setNextLaunchNotification();
+
                     // Populate the launch list
                     finalLaunchNextList.addAll(response.body().getLaunches());
 
@@ -240,6 +257,8 @@ public class MainActivity extends AppCompatActivity {
                 public void onFailure(Call<LaunchNextList> call, Throwable t) {
                     ArrayList<Launch> launchNextFailureList = new ArrayList<Launch>();
                     ArrayList<Mission> launchNextMissionFailureList = new ArrayList<>();
+
+                    //TODO handle notification without internet connection
 
                     recyclerView = findViewById(R.id.recycler_view_notice_list);
                     launchNextAdapter = new LaunchNextAdapter(MainActivity.this, launchNextFailureList, launchNextMissionFailureList);
@@ -354,6 +373,9 @@ public class MainActivity extends AppCompatActivity {
                             // Set the Countdown Timer
                             setCountDownTimer();
 
+                            // Set the Notification Function
+                            setNextLaunchNotification();
+
                             recyclerView = findViewById(R.id.recycler_view_notice_list);
                             launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
 
@@ -414,6 +436,8 @@ public class MainActivity extends AppCompatActivity {
                 .withDescription("Turn notification on or off")
                 .withDescriptionTextColor(getResources().getColor(R.color.material_drawer_header_selection_subtext))
                 .withIcon(FontAwesome.Icon.faw_bell)
+                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.notificationSwitchPref, false))
+                .withOnCheckedChangeListener(onCheckedChangeListener)
                 .withSelectable(false);
 
         // Agency Filter List
@@ -613,6 +637,10 @@ public class MainActivity extends AppCompatActivity {
                  * saves value of check into the shared preference in global constants class
                  */
                 switch (id) {
+                    // Notification
+                    case 1:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.notificationSwitchPref, isChecked).apply();
+                        break;
                     // NASA
                     case 4:
                         filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterAgencyNASA, isChecked).apply();
@@ -985,7 +1013,8 @@ public class MainActivity extends AppCompatActivity {
                                                 missionListSorted.addAll(finalLaunchNextList.get(i).getMissions());
                                             }
 
-                                            Toast.makeText(MainActivity.this, String.valueOf(missionListSorted.size()), Toast.LENGTH_LONG).show();
+                                            // Debug Toast
+                                            // Toast.makeText(MainActivity.this, String.valueOf(missionListSorted.size()), Toast.LENGTH_LONG).show();
 
                                             // Set next launch string variable with the next launch time from json response
                                             nextLaunchTimerString = finalLaunchNextList.get(0).getWindowstart();
@@ -1045,6 +1074,9 @@ public class MainActivity extends AppCompatActivity {
         // Get the current time
         Date currentTime = Calendar.getInstance().getTime();
 
+        // Debug Toast for nextLaunchTime
+        Toast.makeText(MainActivity.this, currentTime.toString(), Toast.LENGTH_LONG).show();
+
         // Get the difference between current time and next launch time
         long diffInMs = nextLaunchTime.getTime() - currentTime.getTime();
 
@@ -1100,6 +1132,89 @@ public class MainActivity extends AppCompatActivity {
         return dateResult;
     }
 
+    /**
+     * Creates a Notification channel, for OREO and higher.
+     */
+    private void createNotificationChannel() {
 
+        // Create a notification manager object.
+        mNotificationManager =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        // Notification channels are only available in OREO and higher.
+        // So, add a check on SDK version.
+        if (android.os.Build.VERSION.SDK_INT >=
+                android.os.Build.VERSION_CODES.O) {
+
+            // Create the NotificationChannel with all the parameters.
+            NotificationChannel notificationChannel = new NotificationChannel
+                    (PRIMARY_CHANNEL_ID,
+                            "Robket - Next Space Launch Schedule",
+                            NotificationManager.IMPORTANCE_HIGH);
+
+            notificationChannel.enableLights(true);
+            notificationChannel.setLightColor(Color.RED);
+            notificationChannel.enableVibration(true);
+            notificationChannel.setDescription
+                    ("Robket is an app to see next rocket launches in the world");
+
+            mNotificationManager.createNotificationChannel(notificationChannel);
+        }
+    }
+
+
+    /**
+     * This method sets the next launches notification
+     */
+    private void setNextLaunchNotification() {
+        // Get the Date of next Launch
+        Date nextLaunchTime = convertJSONStringToDate(nextLaunchTimerString);
+
+        mNotificationManager = (NotificationManager)
+                getSystemService(NOTIFICATION_SERVICE);
+
+        // Set up the Notification Broadcast Intent.
+        Intent notifyIntent = new Intent(this, AlarmReceiver.class);
+
+        final PendingIntent notifyPendingIntent = PendingIntent.getBroadcast
+                (this, NOTIFICATION_ID, notifyIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+
+        final AlarmManager alarmManager = (AlarmManager) getSystemService
+                (ALARM_SERVICE);
+
+        // Set the alarm to start at launch time
+        Calendar firingCal = Calendar.getInstance();
+        Calendar currentCal = Calendar.getInstance();
+
+        firingCal.setTime(nextLaunchTime);
+
+//        firingCal.setTimeInMillis(System.currentTimeMillis());
+//        firingCal.set(Calendar.HOUR_OF_DAY, 22);
+//        firingCal.set(Calendar.MINUTE, 8);
+//        firingCal.set(Calendar.DAY_OF_MONTH, 26);
+//        firingCal.set(Calendar.MONTH, 12);
+//        firingCal.set(Calendar.YEAR, 2018);
+//        firingCal.set(2018, 11, 26, 22, 13,0);
+
+        long intendedTime = firingCal.getTimeInMillis();
+        long currentTime = currentCal.getTimeInMillis();
+
+        if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.notificationSwitchPref, false) && intendedTime >= currentTime) {
+            // If the Switch is turned on, set the alarm based on next launch time
+            if (alarmManager != null) {
+                alarmManager.set(AlarmManager.RTC, intendedTime, notifyPendingIntent);
+            }
+        } else {
+            // Cancel notification if the Switch is turned off.
+            mNotificationManager.cancelAll();
+
+            if (alarmManager != null) {
+                alarmManager.cancel(notifyPendingIntent);
+            }
+        }
+
+
+    }
 }
 

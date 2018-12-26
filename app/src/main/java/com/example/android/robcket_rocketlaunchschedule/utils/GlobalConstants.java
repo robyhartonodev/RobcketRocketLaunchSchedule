@@ -6,7 +6,8 @@ package com.example.android.robcket_rocketlaunchschedule.utils;
 public final class GlobalConstants {
 
     // Value of notification switch
-    public static Boolean notificationSwitchPref;
+    public static String notificationSwitchPref = "NOTIFICATION_SWITCH_KEY";
+
     /**
      * Id launch service provider (lsp)
      * 44   : National Aeronautics and Space Administration (NASA)
@@ -38,25 +39,6 @@ public final class GlobalConstants {
     public static String filterAgencyISRO = "FILTER_AGENCY_ISRO_PREF_KEY";
     // Value of filter RocketLabLtd
     public static String filterAgencyRocketLabLtd = "FILTER_AGENCY_ROCKETLABLTB_PREF_KEY";
-
-    // Value of filter NASA
-    public static Boolean filterAgencyNASABoolean;
-    // Value of filter SpaceX
-    public static Boolean filterAgencySpaceXBoolean;
-    // Value of filter ULA
-    public static Boolean filterAgencyULABoolean;
-    // Value of filter ROSCOSMOS
-    public static Boolean filterAgencyROSCOSMOSBoolean;
-    // Value of filter JAXA
-    public static Boolean filterAgencyJAXABoolean;
-    // Value of filter Arianespace
-    public static Boolean filterAgencyArianespaceBoolean;
-    // Value of filter CASC
-    public static Boolean filterAgencyCASCBoolean;
-    // Value of filter ISRO
-    public static Boolean filterAgencyISROBoolean;
-    // Value of filter RocketLabLtd
-    public static Boolean filterAgencyRocketLabLtdBoolean;
 
     /**
      * Filter variables for location (actually pad)
@@ -149,15 +131,14 @@ public final class GlobalConstants {
     // Value of filter Naro Space Center
     public static String filterLocationNaro = "FILTER_LOCATION_NARO_PREF_KEY";
     // Value of filter Kodiak Launch Complex
-    public static String filterLocationKodiak= "FILTER_LOCATION_KODIAK_PREF_KEY";
+    public static String filterLocationKodiak = "FILTER_LOCATION_KODIAK_PREF_KEY";
     // Value of filter Wenchang Satellite Launch Center
-    public static String filterLocationWenchang= "FILTER_LOCATION_WENCHANG_PREF_KEY";
+    public static String filterLocationWenchang = "FILTER_LOCATION_WENCHANG_PREF_KEY";
     // Value of filter Unknown Location
     public static String filterLocationUnknown = "FILTER_LOCATION_UNKNOWN_PREF_KEY";
 
 
-
-    private GlobalConstants(){
+    private GlobalConstants() {
 
     }
 
