@@ -1,5 +1,7 @@
 package com.example.android.robcket_rocketlaunchschedule.activity;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
 import com.example.android.robcket_rocketlaunchschedule.R;
@@ -8,6 +10,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.squareup.picasso.Picasso;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -17,8 +20,10 @@ import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.style.URLSpan;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class LaunchDetailActivity extends AppCompatActivity {
 
@@ -29,6 +34,8 @@ public class LaunchDetailActivity extends AppCompatActivity {
     // Variables for Details
     private TextView mLaunchDateTextView;
     private TextView mLaunchWindowTextView;
+    private Button mLaunchWatchButton;
+    private Button mLaunchShareButton;
 
     // Variables for Missions
     private TextView mLaunchMissionNameTextView;
@@ -50,6 +57,7 @@ public class LaunchDetailActivity extends AppCompatActivity {
     private String MISSION_SUMMARY_EXTRA = "LAUNCH_MISSION_SUMMARY";
     private String LAUNCH_DATE_EXTRA = "LAUNCH_DATE";
     private String LAUNCH_WINDOW_EXTRA = "LAUNCH_WINDOW";
+    private String LAUNCH_VID_URL_EXTRA = "LAUNCH_VID_URL";
     private String ROCKET_NAME_EXTRA = "LAUNCH_ROCKET_NAME";
     private String ROCKET_WIKI_URL_EXTRA = "LAUNCH_ROCKET_WIKI_URL";
     private String PAD_NAME_EXTRA = "LAUNCH_PAD";
@@ -67,15 +75,6 @@ public class LaunchDetailActivity extends AppCompatActivity {
         // Display back button on toolbar
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         // Set toolbar collapsing image
         mLaunchRocketImageView = findViewById(R.id.launch_rocket_detail_image_view);
@@ -127,6 +126,42 @@ public class LaunchDetailActivity extends AppCompatActivity {
         // Set Launch Window
         mLaunchWindowTextView = findViewById(R.id.textview_window_value);
         mLaunchWindowTextView.setText(getIntent().getStringExtra(LAUNCH_WINDOW_EXTRA));
+
+        // Set Watch Button
+        mLaunchWatchButton = findViewById(R.id.button_watch);
+        mLaunchWatchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Get Url from extra
+                String url = getIntent().getStringExtra(LAUNCH_VID_URL_EXTRA);
+
+                // If url string is empty then show Toast that says no stream available
+                if (!url.equals("empty")) {
+                    // Set Intent to redirect to link
+                    Intent watchIntent = new Intent(Intent.ACTION_VIEW);
+                    watchIntent.setData(Uri.parse(url));
+                    startActivity(watchIntent);
+                }else{
+                    Toast.makeText(LaunchDetailActivity.this, "No live stream found for the launch", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        // Set Share Button
+        mLaunchShareButton = findViewById(R.id.button_share);
+        mLaunchShareButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent shareIntent = new Intent();
+                shareIntent.setAction(Intent.ACTION_SEND);
+                shareIntent.putExtra(Intent.EXTRA_TEXT, String.format("Catch the launch of the %s by %s on %s",
+                        getIntent().getStringExtra(LAUNCH_TITLE_EXTRA),
+                        getIntent().getStringExtra(AGENCY_NAME_EXTRA),
+                        getIntent().getStringExtra(LAUNCH_DATE_EXTRA)));
+                shareIntent.setType("text/plain");
+                startActivity(shareIntent);
+            }
+        });
     }
 
     /**
@@ -219,4 +254,5 @@ public class LaunchDetailActivity extends AppCompatActivity {
         }
         textView.setText(s);
     }
+
 }

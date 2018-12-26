@@ -31,6 +31,7 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
     private String LAUNCH_TITLE_EXTRA = "LAUNCH_TITLE";
     private String MISSION_NAME_EXTRA = "LAUNCH_MISSION_NAME";
     private String MISSION_SUMMARY_EXTRA = "LAUNCH_MISSION_SUMMARY";
+    private String LAUNCH_VID_URL_EXTRA = "LAUNCH_VID_URL";
     private String LAUNCH_DATE_EXTRA = "LAUNCH_DATE";
     private String LAUNCH_WINDOW_EXTRA = "LAUNCH_WINDOW";
     private String ROCKET_NAME_EXTRA = "LAUNCH_ROCKET_NAME";
@@ -39,6 +40,7 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
     private String PAD_MAP_URL_EXTRA = "LAUNCH_PAD_MAP_URL";
     private String AGENCY_NAME_EXTRA = "LAUNCH_AGENCY_NAME";
     private String AGENCY_WIKI_URL_EXTRA = "LAUNCH_AGENCY_WIKI_URL";
+
 
     // Private Variables for constructors
     private ArrayList<Launch> launchList;
@@ -143,6 +145,14 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
             // Agency (Launch Service Provider) Url
             String currentAgencyUrl = launchList.get(getAdapterPosition()).getLsp().getWikiURL();
 
+            String currentLaunchVidsUrls;
+            // Launch Vid Urls (first index)
+            if (launchList.get(getAdapterPosition()).getVidURLs().isEmpty()) {
+                currentLaunchVidsUrls = "empty";
+            } else {
+                currentLaunchVidsUrls = launchList.get(getAdapterPosition()).getVidURLs().get(0);
+            }
+
             Intent detailLaunchIntent = new Intent(mContext, LaunchDetailActivity.class);
 
             // PutExtra all information for LaunchDetailActivity.class
@@ -158,6 +168,7 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
             detailLaunchIntent.putExtra(PAD_MAP_URL_EXTRA, currentPadMapUrl);
             detailLaunchIntent.putExtra(AGENCY_NAME_EXTRA, currentAgencyName);
             detailLaunchIntent.putExtra(AGENCY_WIKI_URL_EXTRA, currentAgencyUrl);
+            detailLaunchIntent.putExtra(LAUNCH_VID_URL_EXTRA, currentLaunchVidsUrls);
 
             mContext.startActivity(detailLaunchIntent);
         }
