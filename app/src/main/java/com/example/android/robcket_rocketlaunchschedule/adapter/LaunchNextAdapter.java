@@ -11,13 +11,14 @@ import android.widget.TextView;
 import com.example.android.robcket_rocketlaunchschedule.R;
 import com.example.android.robcket_rocketlaunchschedule.activity.LaunchDetailActivity;
 import com.example.android.robcket_rocketlaunchschedule.model.Launch;
-import com.example.android.robcket_rocketlaunchschedule.model.LaunchNextList;
 import com.example.android.robcket_rocketlaunchschedule.model.Mission;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -63,8 +64,19 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
 
     @Override
     public void onBindViewHolder(@NonNull LaunchNextViewHolder launchNextViewHolder, int position) {
-        // Set the launch title text
-        launchNextViewHolder.txtLaunchTitle.setText(launchList.get(position).getName());
+
+        String launchName = launchList.get(position).getName();
+        List<String> launchListString = Arrays.asList(launchName.split("[|]"));
+
+        // Removed trailing white space
+        String rocketRightRemoved = launchListString.get(0).replaceAll("\\s+$", "");
+        String missionLeftRemoved = launchListString.get(1).replaceAll("^\\s+", "");
+
+        // Set the launch title rocket name
+        launchNextViewHolder.txtLaunchTitleRocket.setText(rocketRightRemoved);
+
+        // Set the launch title mission
+        launchNextViewHolder.txtLaunchTitleMission.setText(missionLeftRemoved);
 
         // Set the launch image
         // Set the ImageView based on String image Url
@@ -88,14 +100,16 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
 
     public class LaunchNextViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        TextView txtLaunchTitle;
+        TextView txtLaunchTitleRocket;
+        TextView txtLaunchTitleMission;
         ImageView ivLaunchImage;
         TextView txtLaunchDate;
         TextView txtLaunchLocation;
 
         public LaunchNextViewHolder(@NonNull View itemView) {
             super(itemView);
-            txtLaunchTitle = itemView.findViewById(R.id.txt_launch_title);
+            txtLaunchTitleRocket = itemView.findViewById(R.id.txt_launch_title_rocket);
+            txtLaunchTitleMission = itemView.findViewById(R.id.txt_launch_title_mission);
             ivLaunchImage = itemView.findViewById(R.id.launch_rocket_image_view);
             txtLaunchDate = itemView.findViewById(R.id.txt_launch_date);
             txtLaunchLocation = itemView.findViewById(R.id.txt_launch_location);

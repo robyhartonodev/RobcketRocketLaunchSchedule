@@ -8,6 +8,15 @@
     tools:context=".activity.MainActivity"
     tools:showIn="@layout/activity_main">
 
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/animation_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        app:lottie_autoPlay="true"
+        app:lottie_fileName="material_wave_loading.json"
+        app:lottie_loop="true" />
+
     <TextView
         android:id="@+id/textview_next_launch"
         android:layout_width="match_parent"
@@ -18,6 +27,7 @@
         android:textColor="@color/material_drawer_dark_primary_text"
         android:textSize="14sp"
         android:textStyle="bold"
+        android:visibility="gone"
         app:fontFamily="@font/orbitron" />
 
     <TextView
@@ -31,6 +41,7 @@
         android:textColor="@color/material_drawer_dark_primary_text"
         android:textSize="28sp"
         android:textStyle="bold"
+        android:visibility="gone"
         app:fontFamily="@font/orbitron" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

@@ -1,5 +1,6 @@
 package com.example.android.robcket_rocketlaunchschedule.activity;
 
+import android.app.ActionBar;
 import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -12,6 +13,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.example.android.robcket_rocketlaunchschedule.adapter.LaunchNextAdapter;
 import com.example.android.robcket_rocketlaunchschedule.model.Launch;
 import com.example.android.robcket_rocketlaunchschedule.model.LaunchNextList;
@@ -36,7 +38,9 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.CompoundButton;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -56,6 +60,8 @@ import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.stephentuso.welcome.WelcomeHelper;
+import com.vansuita.materialabout.builder.AboutBuilder;
+import com.vansuita.materialabout.views.AboutView;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -86,7 +92,9 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private SwipeRefreshLayout launchSwipeRefreshLayout;
     private TextView nextLaunchTimerTextView;
+    private TextView nextLaunchLabelTextView;
     private Drawer result;
+    private LottieAnimationView loadingListAnimationView;
 
     private String nextLaunchTimerString;
 
@@ -120,11 +128,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
         // Shared Preferences setup
         filterSettingsSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         // Set Next Launch Timer TextView
         nextLaunchTimerTextView = findViewById(R.id.textview_next_launch_timer);
+        nextLaunchLabelTextView = findViewById(R.id.textview_next_launch);
+
+        // Loading Animation View
+        loadingListAnimationView = findViewById(R.id.animation_view);
 
         // SwipeRefreshLayout
         launchSwipeRefreshLayout = findViewById(R.id.swiperefresh);
@@ -147,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Create Notification Channel for Oreo (API >= 27)
         createNotificationChannel();
+
     }
 
 
@@ -190,6 +204,9 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.action_tutorial) {
             // Show the OnBoarding / Tutorial screen
             welcomeHelper.forceShow();
+            return true;
+        } else if (id == R.id.action_about){
+            setAboutMe();
             return true;
         }
 
@@ -251,6 +268,9 @@ public class MainActivity extends AppCompatActivity {
                     LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
                     recyclerView.setLayoutManager(layoutManager);
                     recyclerView.setAdapter(launchNextAdapter);
+
+                    // Hide AnimationView for loading after finished loading
+                    loadingListAnimationView.setVisibility(View.INVISIBLE);
                 }
 
                 @Override
@@ -384,6 +404,9 @@ public class MainActivity extends AppCompatActivity {
                             LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
                             recyclerView.setLayoutManager(layoutManager);
                             recyclerView.setAdapter(launchNextAdapter);
+
+                            // Hide AnimationView for loading after finished loading
+                            loadingListAnimationView.setVisibility(View.INVISIBLE);
                         }
 
                         @Override
@@ -400,6 +423,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
         } // end else
+
     }
 
     /**
@@ -900,6 +924,9 @@ public class MainActivity extends AppCompatActivity {
 
                                     // Remove refresh button when done
                                     launchSwipeRefreshLayout.setRefreshing(false);
+
+                                    // Hide AnimationView for loading after finished loading
+                                    loadingListAnimationView.setVisibility(View.INVISIBLE);
                                 }
 
                                 @Override
@@ -1034,6 +1061,9 @@ public class MainActivity extends AppCompatActivity {
 
                                             // Remove refresh button when done
                                             launchSwipeRefreshLayout.setRefreshing(false);
+
+                                            // Hide AnimationView for loading after finished loading
+                                            loadingListAnimationView.setVisibility(View.INVISIBLE);
                                         }
 
                                         @Override
@@ -1068,6 +1098,10 @@ public class MainActivity extends AppCompatActivity {
      * This method sets the countdown timer for the launch
      */
     private void setCountDownTimer() {
+        // Set Timer TextView to visible
+        nextLaunchLabelTextView.setVisibility(View.VISIBLE);
+        nextLaunchTimerTextView.setVisibility(View.VISIBLE);
+
         // Get the Date of next Launch
         Date nextLaunchTime = convertJSONStringToDate(nextLaunchTimerString);
 
@@ -1213,8 +1247,34 @@ public class MainActivity extends AppCompatActivity {
                 alarmManager.cancel(notifyPendingIntent);
             }
         }
+    }
+
+    /**
+     * This method sets about me screen
+     */
+    private void setAboutMe(){
+        AboutView view = AboutBuilder.with(this)
+                .setPhoto(R.mipmap.profile_picture)
+                .setCover(R.mipmap.profile_cover)
+                .setName("Roby Hartono")
+                .setSubTitle("Mobile Developer")
+                .setBrief("I'm warmed of mobile technologies. Ideas maker, curious and nature lover. Like basketball and video games.")
+                .setAppIcon(R.mipmap.ic_launcher)
+                .setAppName(R.string.app_name)
+                //TODO add google play store link
+                .addGooglePlayStoreLink("8002078663318221363")
+                .addGitHubLink("user")
+                .addFacebookLink("user")
+                .addFiveStarsAction()
+                .setVersionNameAsAppSubTitle()
+                .addShareAction(R.string.app_name)
+                .setWrapScrollView(true)
+                .setLinksAnimated(true)
+                .setShowAsCard(true)
+                .build();
 
 
+         addContentView(view, new FrameLayout.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
     }
 }
 

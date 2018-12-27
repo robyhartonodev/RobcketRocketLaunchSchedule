@@ -13,6 +13,33 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="AppThemeDark" parent="Theme.AppCompat.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppThemeLight" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+
+    <style name="AppThemeCustom" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <item name="colorPrimary">@color/primaryColor</item>
+        <item name="colorPrimaryDark">@color/primaryDarkColor</item>
+        <item name="colorAccent">@color/secondaryColor</item>
+        <item name="android:textColorPrimary">@color/md_black_1000</item>
+        <item name="android:textColorSecondary">@color/md_white_1000</item>
+
+        <item name="android:windowBackground">@color/md_black_1000</item>
+        <item name="android:colorBackground">@color/md_white_1000</item>
+        <item name="colorButtonNormal">@color/secondaryColor</item>
+        <item name="colorControlHighlight">@color/material_drawer_selected</item>
+    </style>
+
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 

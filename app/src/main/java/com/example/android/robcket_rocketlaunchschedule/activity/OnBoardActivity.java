@@ -17,17 +17,22 @@ public class OnBoardActivity extends WelcomeActivity {
 
         return new WelcomeConfiguration.Builder(this)
                 .defaultBackgroundColor(R.color.secondaryDarkColor)
-                .page(new TitlePage(R.drawable.ic_notification,
-                        "Title")
+                .page(new TitlePage(R.drawable.ic_iconfinder_space_exploration,
+                        "ROBKET - NEXT SPACE LAUNCH")
                 )
-                .page(new BasicPage(R.drawable.ic_calendar,
-                        "Header",
-                        "More text.")
+                .page(new BasicPage(R.drawable.ic_iconfinder_space_shuttle,
+                        "DETAIL",
+                        "Get detailed information about the launch")
                         .background(R.color.secondaryColor)
                 )
-                .page(new BasicPage(R.drawable.ic_rocket_onboard,
-                        "Lorem ipsum",
-                       "dolor sit amet.")
+                .page(new BasicPage(R.drawable.ic_iconfinder_satellite,
+                        "NOTIFICATION",
+                        "Get notification for the upcoming rocket launches in the world")
+                        .background(R.color.secondaryColor)
+                )
+                .page(new BasicPage(R.drawable.ic_iconfinder_astronaut,
+                        "FILTER",
+                       "Follow your desired rocket launch by agencies like NASA, SpaceX, etc.")
                         .background(R.color.secondaryLightColor)
                 )
                 .swipeToDismiss(true)
