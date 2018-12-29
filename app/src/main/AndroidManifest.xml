@@ -18,8 +18,8 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.VIEW" />
             </intent-filter>
         </activity>
         <activity
@@ -38,8 +38,26 @@
         <receiver
             android:name=".receiver.AlarmReceiver"
             android:enabled="true"
-            android:exported="false">
-        </receiver>
+            android:exported="false" />
+
+        <activity
+            android:name=".activity.AboutMeActivity"
+            android:parentActivityName=".activity.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.android.robcket_rocketlaunchschedule.activity.MainActivity" />
+        </activity>
+
+        <activity
+            android:name=".activity.LicenseActivity"
+            android:label="@string/license"
+            android:parentActivityName=".activity.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.android.robcket_rocketlaunchschedule.activity.MainActivity" />
+        </activity>
+
     </application>
 
 </manifest>

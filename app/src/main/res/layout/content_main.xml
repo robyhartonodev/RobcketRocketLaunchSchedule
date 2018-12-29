@@ -17,6 +17,26 @@
         app:lottie_fileName="material_wave_loading.json"
         app:lottie_loop="true" />
 
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/animation_view_not_found"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        app:lottie_autoPlay="true"
+        app:lottie_fileName="not_found.json"
+        app:lottie_loop="true" />
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/animation_view_network_lost"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        app:lottie_autoPlay="true"
+        app:lottie_fileName="network_lost.json"
+        app:lottie_loop="false" />
+
     <TextView
         android:id="@+id/textview_next_launch"
         android:layout_width="match_parent"
@@ -43,6 +63,18 @@
         android:textStyle="bold"
         android:visibility="gone"
         app:fontFamily="@font/orbitron" />
+
+    <TextView
+        android:id="@+id/textview_no_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerInParent="true"
+        android:layout_margin="16dp"
+        android:text="@string/empty_text"
+        android:textAlignment="center"
+        android:textAppearance="?android:textAppearanceMedium"
+        android:visibility="gone" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swiperefresh"

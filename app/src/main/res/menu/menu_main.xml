@@ -20,8 +20,8 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/action_attribution"
+        android:id="@+id/action_licenses"
         android:orderInCategory="40"
-        android:title="@string/action_attribution"
+        android:title="@string/action_licenses"
         app:showAsAction="never" />
 </menu>

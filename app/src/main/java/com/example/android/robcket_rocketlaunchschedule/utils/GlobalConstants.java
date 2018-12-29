@@ -8,6 +8,9 @@ public final class GlobalConstants {
     // Value of notification switch
     public static String notificationSwitchPref = "NOTIFICATION_SWITCH_KEY";
 
+    // Value of unconfirmed launch switch
+    public static String unconfirmedSwitchPref = "CONFIRM_SWITCH_KEY";
+
     /**
      * Id launch service provider (lsp)
      * 44   : National Aeronautics and Space Administration (NASA)

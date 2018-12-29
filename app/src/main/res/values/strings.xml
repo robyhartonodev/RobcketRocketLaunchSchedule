@@ -20,6 +20,63 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="action_about">About</string>
-    <string name="action_attribution">Attribution</string>
+    <string name="action_licenses">Licenses</string>
+    <string name="credits">Credits</string>
+    <string name="credit_desc">This application uses Open Source components. You can find the source code of their open source projects along with license information below.  We acknowledge and are grateful to these developers for their contributions to open source.</string>
+    <string name="materialdrawer">MaterialDrawer</string>
+    <string name="lottie_android">Lottie-android</string>
+    <string name="welcome_screen">Welcome Screen</string>
+    <string name="materialabout">MaterialAbout</string>
+    <string name="picasso">Picasso</string>
+    <string name="retrofit">Retrofit</string>
+    <string name="gson">Gson</string>
+    <string name="rxjava">RxJava</string>
+    <string name="outer_space_mono_color_expedition_frame_design">Outer Space Mono Color - Expedition Frame Design</string>
+    <string name="materialdrawer_desc">
+        Project: https://github.com/mikepenz/MaterialDrawer\nCopyright 2016 Mike Penz\nhttp://www.apache.org/licenses/LICENSE-2.0
+    </string>
+    <string name="lottie_android_desc">
+        Project: https://github.com/airbnb/lottie-android\nCopyright 2018 Airbnb, Inc.\nhttp://www.apache.org/licenses/LICENSE-2.0
+    </string>
+    <string name="welcome_screen_desc">
+        Project: https://github.com/stephentuso/welcome-android\nCopyright 2015-2017 Stephen Tuso\nhttp://www.apache.org/licenses/LICENSE-2.0
+    </string>
+    <string name="materialabout_desc">
+        Project: https://github.com/jrvansuita/MaterialAbout\nCopyright © 2016 Arleu Cezar Vansuita Júnior\nMIT License
+    </string>
+    <string name="picasso_desc">
+        Project: https://github.com/square/picasso\nCopyright 2013 Square, Inc.\nhttp://www.apache.org/licenses/LICENSE-2.0
+    </string>
+    <string name="retrofit_desc">
+        Project: https://github.com/square/retrofit\nCopyright 2013 Square, Inc.\nhttp://www.apache.org/licenses/LICENSE-2.0
+    </string>
+    <string name="rxjava_desc">
+        Project: https://github.com/ReactiveX/RxJava\nCopyright © 2016-present, RxJava Contributors.\nhttp://www.apache.org/licenses/LICENSE-2.0
+    </string>
+    <string name="gson_desc">
+        Project: https://github.com/google/gson\nCopyright 2008 Google Inc.\nhttp://www.apache.org/licenses/LICENSE-2.0
+    </string>
+    <string name="outerspace_desc">
+        Link: https://www.iconfinder.com/Chanut-is\nhttps://creativecommons.org/licenses/by/3.0/
+    </string>
+    <string name="launchlibrarynet">Launch Library Net</string>
+    <string name="launchlibrarynet_desc">
+        Link: https://launchlibrary.net/docs/1.4/api.html
+    </string>
+    <string name="tbd">TBD</string>
+    <string name="empty_text">No launch found. Please try another settings in the menu.</string>
+    <string name="materialwaveloading">LottieFiles - Material Wave Loading</string>
+    <string name="materialwaveloading_desc">
+        Link: https://dribbble.com/\n\@dribbble / LottieFiles\nhttps://creativecommons.org/licenses/by/4.0/
+    </string>
+    <string name="networknotfound">LottieFiles - Network Lost</string>
+    <string name="networknotfound_desc">
+        Link: https://www.lottiefiles.com/sagar%20shinde\n\@Sagar Shinde / LottieFiles\nhttps://creativecommons.org/licenses/by/4.0/
+    </string>
+    <string name="notresultfound">LottieFiles - Not Found</string>
+    <string name="notresultfound_desc">
+        Link: https://www.lottiefiles.com/kostimarko\n @Kosti Marko / LottieFiles\nhttps://creativecommons.org/licenses/by/4.0/
+    </string>
+
 
 </resources>

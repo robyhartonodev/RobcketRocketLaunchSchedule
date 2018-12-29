@@ -82,12 +82,17 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
         // Set the ImageView based on String image Url
         Picasso.with(mContext)
                 .load(launchList.get(position).getRocket().getImageURL())
+                .fit()
                 .placeholder(R.drawable.ic_rocket)
                 .into(launchNextViewHolder.ivLaunchImage);
 
         // Set the launch date text
-        launchNextViewHolder.txtLaunchDate.setText(getLocalDate(launchList.get(position).getWindowstart()));
-
+        if (launchList.get(position).getTbddate() == 1) {
+            String unconfirmedDate = getLocalDate(launchList.get(position).getWindowstart())+ " (unconfirmed)";
+            launchNextViewHolder.txtLaunchDate.setText(unconfirmedDate);
+        } else {
+            launchNextViewHolder.txtLaunchDate.setText(getLocalDate(launchList.get(position).getWindowstart()));
+        }
         // Set the launch location text
         launchNextViewHolder.txtLaunchLocation.setText(launchList.get(position).getLocation().getName());
 

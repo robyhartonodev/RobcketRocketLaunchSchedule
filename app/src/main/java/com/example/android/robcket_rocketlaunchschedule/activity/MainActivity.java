@@ -93,8 +93,11 @@ public class MainActivity extends AppCompatActivity {
     private SwipeRefreshLayout launchSwipeRefreshLayout;
     private TextView nextLaunchTimerTextView;
     private TextView nextLaunchLabelTextView;
+    private TextView emptyDataTextView;
     private Drawer result;
     private LottieAnimationView loadingListAnimationView;
+    private LottieAnimationView notFoundAnimationView;
+    private LottieAnimationView networkLostAnimationView;
 
     private String nextLaunchTimerString;
 
@@ -136,8 +139,13 @@ public class MainActivity extends AppCompatActivity {
         nextLaunchTimerTextView = findViewById(R.id.textview_next_launch_timer);
         nextLaunchLabelTextView = findViewById(R.id.textview_next_launch);
 
-        // Loading Animation View
+        // Set Empty Textview for data not found
+        emptyDataTextView = findViewById(R.id.textview_no_data);
+
+        // Set Animation View
         loadingListAnimationView = findViewById(R.id.animation_view);
+        networkLostAnimationView = findViewById(R.id.animation_view_network_lost);
+        notFoundAnimationView = findViewById(R.id.animation_view_not_found);
 
         // SwipeRefreshLayout
         launchSwipeRefreshLayout = findViewById(R.id.swiperefresh);
@@ -205,8 +213,13 @@ public class MainActivity extends AppCompatActivity {
             // Show the OnBoarding / Tutorial screen
             welcomeHelper.forceShow();
             return true;
-        } else if (id == R.id.action_about){
-            setAboutMe();
+        } else if (id == R.id.action_about) {
+            Intent aboutIntent = new Intent(this, AboutMeActivity.class);
+            startActivity(aboutIntent);
+            return true;
+        } else if (id == R.id.action_licenses) {
+            Intent licenseIntent = new Intent(this, LicenseActivity.class);
+            startActivity(licenseIntent);
             return true;
         }
 
@@ -253,6 +266,24 @@ public class MainActivity extends AppCompatActivity {
                     // Populate the launch list
                     finalLaunchNextList.addAll(response.body().getLaunches());
 
+                    // Remove unconfirmed launches if checked in filter
+                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.unconfirmedSwitchPref, false)) {
+                        List<Launch> confirmedLaunches = new ArrayList<>();
+
+                        for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                            // Confirmed launches has tbddate = 0
+                            if (finalLaunchNextList.get(i).getTbddate() == 0) {
+                                confirmedLaunches.add(finalLaunchNextList.get(i));
+                            }
+                        }
+                        // Remove all elements in the list
+                        finalLaunchNextList.clear();
+
+                        // Add all elements in confirmed launches list in the empty final launch next list
+                        finalLaunchNextList.addAll(confirmedLaunches);
+                    }
+
+                    // Populate the mission list
                     for (int i = 0; i < finalLaunchNextList.size(); i++) {
                         if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
                             missionListSorted.add(new Mission("TBD", "No Information available"));
@@ -260,14 +291,26 @@ public class MainActivity extends AppCompatActivity {
                         missionListSorted.addAll(finalLaunchNextList.get(i).getMissions());
                     }
 
-                    recyclerView = findViewById(R.id.recycler_view_notice_list);
-                    launchNextAdapter = new LaunchNextAdapter(MainActivity.this, response.body().getLaunches(), missionListSorted);
+                    // If finalLaunchNextList is empty then show textview empty data
+                    if (!finalLaunchNextList.isEmpty()) {
+                        recyclerView = findViewById(R.id.recycler_view_notice_list);
+                        launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
 
-                    // Setup layout manager
-                    int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
-                    LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
-                    recyclerView.setLayoutManager(layoutManager);
-                    recyclerView.setAdapter(launchNextAdapter);
+                        // Setup layout manager
+                        int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
+                        LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
+                        recyclerView.setLayoutManager(layoutManager);
+                        recyclerView.setAdapter(launchNextAdapter);
+
+                        // Hide empty textview if data is available
+                        emptyDataTextView.setVisibility(View.INVISIBLE);
+                    } else {
+                        // Show empty textview if data is unavailable
+                        emptyDataTextView.setVisibility(View.VISIBLE);
+
+                        // Show AnimationView for not found result
+                        notFoundAnimationView.setVisibility(View.VISIBLE);
+                    }
 
                     // Hide AnimationView for loading after finished loading
                     loadingListAnimationView.setVisibility(View.INVISIBLE);
@@ -287,12 +330,24 @@ public class MainActivity extends AppCompatActivity {
                     int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
                     LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
                     recyclerView.setLayoutManager(layoutManager);
+
+                    // Handles RecyclerView stutter scrolling
+                    recyclerView.setHasFixedSize(true);
+                    recyclerView.setItemViewCacheSize(20);
+                    recyclerView.setDrawingCacheEnabled(true);
+
                     recyclerView.setAdapter(launchNextAdapter);
 
                     // Show Toast
                     Toast.makeText(MainActivity.this,
                             "Unable to load the list.\nPlease check your connection"
                             , Toast.LENGTH_LONG).show();
+
+                    // Show Animation View Network not found
+                    networkLostAnimationView.setVisibility(View.VISIBLE);
+
+                    // Hide AnimationView Loading
+                    loadingListAnimationView.setVisibility(View.GONE);
                 }
             });
         } // end if
@@ -365,6 +420,23 @@ public class MainActivity extends AppCompatActivity {
                                 finalLaunchNextList.addAll(launchNextLists.get(i).getLaunches());
                             }
 
+                            // Remove unconfirmed launches if checked in filter
+                            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.unconfirmedSwitchPref, false)) {
+                                List<Launch> confirmedLaunches = new ArrayList<>();
+
+                                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                                    // Confirmed launches has tbddate = 0
+                                    if (finalLaunchNextList.get(i).getTbddate() == 0) {
+                                        confirmedLaunches.add(finalLaunchNextList.get(i));
+                                    }
+                                }
+                                // Remove all elements in the list
+                                finalLaunchNextList.clear();
+
+                                // Add all elements in confirmed launches list in the empty final launch next list
+                                finalLaunchNextList.addAll(confirmedLaunches);
+                            }
+
                             // Sort the final launch next list based on date
                             Collections.sort(finalLaunchNextList, new Comparator<Launch>() {
                                 @Override
@@ -384,26 +456,42 @@ public class MainActivity extends AppCompatActivity {
                                 missionListSorted.addAll(finalLaunchNextList.get(i).getMissions());
                             }
 
-                            Toast.makeText(MainActivity.this, String.valueOf(missionListSorted.size()), Toast.LENGTH_LONG).show();
+                            //Toast.makeText(MainActivity.this, String.valueOf(missionListSorted.size()), Toast.LENGTH_LONG).show();
 
-                            // Set next launch string variable with the next launch time from json response
-                            nextLaunchTimerString = finalLaunchNextList.get(0).getWindowstart();
+                            // If finalLaunchNextList is empty then show textview empty data
+                            if (!finalLaunchNextList.isEmpty()) {
+                                // Set next launch string variable with the next launch time from json response
+                                nextLaunchTimerString = finalLaunchNextList.get(0).getWindowstart();
 
+                                // Set the Countdown Timer
+                                setCountDownTimer();
 
-                            // Set the Countdown Timer
-                            setCountDownTimer();
+                                // Set the Notification Function
+                                setNextLaunchNotification();
 
-                            // Set the Notification Function
-                            setNextLaunchNotification();
+                                recyclerView = findViewById(R.id.recycler_view_notice_list);
+                                launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
 
-                            recyclerView = findViewById(R.id.recycler_view_notice_list);
-                            launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
+                                // Setup layout manager
+                                int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
+                                LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
+                                recyclerView.setLayoutManager(layoutManager);
 
-                            // Setup layout manager
-                            int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
-                            LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
-                            recyclerView.setLayoutManager(layoutManager);
-                            recyclerView.setAdapter(launchNextAdapter);
+                                // Handles RecyclerView stutter scrolling
+                                recyclerView.setHasFixedSize(true);
+                                recyclerView.setItemViewCacheSize(20);
+                                recyclerView.setDrawingCacheEnabled(true);
+
+                                recyclerView.setAdapter(launchNextAdapter);
+                                // Hide empty textview if data is available
+                                emptyDataTextView.setVisibility(View.INVISIBLE);
+                            } else {
+                                // Show empty textview if data is unavailable
+                                emptyDataTextView.setVisibility(View.VISIBLE);
+
+                                // Show AnimationView for result not found
+                                notFoundAnimationView.setVisibility(View.VISIBLE);
+                            }
 
                             // Hide AnimationView for loading after finished loading
                             loadingListAnimationView.setVisibility(View.INVISIBLE);
@@ -415,6 +503,12 @@ public class MainActivity extends AppCompatActivity {
                             Toast.makeText(MainActivity.this,
                                     "Unable to load the list.\nPlease check your connection"
                                     , Toast.LENGTH_LONG).show();
+
+                            // Show AnimationView Network not found
+                            networkLostAnimationView.setVisibility(View.VISIBLE);
+
+                            // Hide AnimationView Loading
+                            loadingListAnimationView.setVisibility(View.GONE);
                         }
 
                         @Override
@@ -461,6 +555,15 @@ public class MainActivity extends AppCompatActivity {
                 .withDescriptionTextColor(getResources().getColor(R.color.material_drawer_header_selection_subtext))
                 .withIcon(FontAwesome.Icon.faw_bell)
                 .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.notificationSwitchPref, false))
+                .withOnCheckedChangeListener(onCheckedChangeListener)
+                .withSelectable(false);
+
+        SwitchDrawerItem itemUnconfirmed = new SwitchDrawerItem()
+                .withIdentifier(123)
+                .withName("Hide unconfirmed launches")
+                .withDescriptionTextColor(getResources().getColor(R.color.material_drawer_header_selection_subtext))
+                .withIcon(FontAwesome.Icon.faw_check_circle)
+                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.unconfirmedSwitchPref, false))
                 .withOnCheckedChangeListener(onCheckedChangeListener)
                 .withSelectable(false);
 
@@ -614,6 +717,8 @@ public class MainActivity extends AppCompatActivity {
                 .addDrawerItems(
                         itemNotification,
                         new DividerDrawerItem(),
+                        itemUnconfirmed,
+                        new DividerDrawerItem(),
                         itemFilterAgency
                         //new DividerDrawerItem(),
                         //itemFilterLocation
@@ -664,6 +769,10 @@ public class MainActivity extends AppCompatActivity {
                     // Notification
                     case 1:
                         filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.notificationSwitchPref, isChecked).apply();
+                        break;
+                    // Confirm Launch
+                    case 123:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.unconfirmedSwitchPref, isChecked).apply();
                         break;
                     // NASA
                     case 4:
@@ -906,6 +1015,23 @@ public class MainActivity extends AppCompatActivity {
                                     // Populate the launch list
                                     finalLaunchNextList.addAll(response.body().getLaunches());
 
+                                    // Remove unconfirmed launches if checked in filter
+                                    if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.unconfirmedSwitchPref, false)) {
+                                        List<Launch> confirmedLaunches = new ArrayList<>();
+
+                                        for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                                            // Confirmed launches has tbddate = 0
+                                            if (finalLaunchNextList.get(i).getTbddate() == 0) {
+                                                confirmedLaunches.add(finalLaunchNextList.get(i));
+                                            }
+                                        }
+                                        // Remove all elements in the list
+                                        finalLaunchNextList.clear();
+
+                                        // Add all elements in confirmed launches list in the empty final launch next list
+                                        finalLaunchNextList.addAll(confirmedLaunches);
+                                    }
+
                                     for (int i = 0; i < finalLaunchNextList.size(); i++) {
                                         if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
                                             missionListSorted.add(new Mission("TBD", "No Information available"));
@@ -913,16 +1039,33 @@ public class MainActivity extends AppCompatActivity {
                                         missionListSorted.addAll(finalLaunchNextList.get(i).getMissions());
                                     }
 
-                                    recyclerView = findViewById(R.id.recycler_view_notice_list);
-                                    launchNextAdapter = new LaunchNextAdapter(MainActivity.this, response.body().getLaunches(), missionListSorted);
+                                    // If finalLaunchNextList is empty then show textview empty data
+                                    if (!finalLaunchNextList.isEmpty()) {
+                                        recyclerView = findViewById(R.id.recycler_view_notice_list);
+                                        launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
 
-                                    // Setup layout manager
-                                    int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
-                                    LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
-                                    recyclerView.setLayoutManager(layoutManager);
-                                    recyclerView.setAdapter(launchNextAdapter);
+                                        // Setup layout manager
+                                        int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
+                                        LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
+                                        recyclerView.setLayoutManager(layoutManager);
 
-                                    // Remove refresh button when done
+                                        // Handles RecyclerView stutter scrolling
+                                        recyclerView.setHasFixedSize(true);
+                                        recyclerView.setItemViewCacheSize(20);
+                                        recyclerView.setDrawingCacheEnabled(true);
+
+                                        recyclerView.setAdapter(launchNextAdapter);
+                                        // Hide empty textview if data is available
+                                        emptyDataTextView.setVisibility(View.INVISIBLE);
+                                    } else {
+                                        // Show empty textview if data is unavailable
+                                        emptyDataTextView.setVisibility(View.VISIBLE);
+
+                                        // Show AnimationView for result not found
+                                        notFoundAnimationView.setVisibility(View.VISIBLE);
+                                    }
+
+                                    // Remove loading refresh button after finished refresh
                                     launchSwipeRefreshLayout.setRefreshing(false);
 
                                     // Hide AnimationView for loading after finished loading
@@ -941,6 +1084,12 @@ public class MainActivity extends AppCompatActivity {
                                     int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
                                     LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
                                     recyclerView.setLayoutManager(layoutManager);
+
+                                    // Handles RecyclerView stutter scrolling
+                                    recyclerView.setHasFixedSize(true);
+                                    recyclerView.setItemViewCacheSize(20);
+                                    recyclerView.setDrawingCacheEnabled(true);
+
                                     recyclerView.setAdapter(launchNextAdapter);
 
                                     // Show Toast
@@ -950,6 +1099,12 @@ public class MainActivity extends AppCompatActivity {
 
                                     // Remove refresh button when done
                                     launchSwipeRefreshLayout.setRefreshing(false);
+
+                                    // Show AnimationView Network not found
+                                    networkLostAnimationView.setVisibility(View.VISIBLE);
+
+                                    // Hide AnimationView Loading
+                                    loadingListAnimationView.setVisibility(View.GONE);
                                 }
                             });
                         } // end if
@@ -1021,6 +1176,23 @@ public class MainActivity extends AppCompatActivity {
                                                 finalLaunchNextList.addAll(launchNextLists.get(i).getLaunches());
                                             }
 
+                                            // Remove unconfirmed launches if checked in filter
+                                            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.unconfirmedSwitchPref, false)) {
+                                                List<Launch> confirmedLaunches = new ArrayList<>();
+
+                                                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                                                    // Confirmed launches has tbddate = 0
+                                                    if (finalLaunchNextList.get(i).getTbddate() == 0) {
+                                                        confirmedLaunches.add(finalLaunchNextList.get(i));
+                                                    }
+                                                }
+                                                // Remove all elements in the list
+                                                finalLaunchNextList.clear();
+
+                                                // Add all elements in confirmed launches list in the empty final launch next list
+                                                finalLaunchNextList.addAll(confirmedLaunches);
+                                            }
+
                                             // Sort the final launch next list based on date
                                             Collections.sort(finalLaunchNextList, new Comparator<Launch>() {
                                                 @Override
@@ -1043,21 +1215,37 @@ public class MainActivity extends AppCompatActivity {
                                             // Debug Toast
                                             // Toast.makeText(MainActivity.this, String.valueOf(missionListSorted.size()), Toast.LENGTH_LONG).show();
 
-                                            // Set next launch string variable with the next launch time from json response
-                                            nextLaunchTimerString = finalLaunchNextList.get(0).getWindowstart();
+                                            // If finalLaunchNextList is empty then show textview empty data
+                                            if (!finalLaunchNextList.isEmpty()) {
+                                                // Set next launch string variable with the next launch time from json response
+                                                nextLaunchTimerString = finalLaunchNextList.get(0).getWindowstart();
 
+                                                // Set the Countdown Timer
+                                                setCountDownTimer();
 
-                                            // Set the Countdown Timer
-                                            setCountDownTimer();
+                                                recyclerView = findViewById(R.id.recycler_view_notice_list);
+                                                launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
 
-                                            recyclerView = findViewById(R.id.recycler_view_notice_list);
-                                            launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
+                                                // Setup layout manager
+                                                int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
+                                                LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
+                                                recyclerView.setLayoutManager(layoutManager);
 
-                                            // Setup layout manager
-                                            int gridColumnCount = getResources().getInteger(R.integer.grid_column_count);
-                                            LinearLayoutManager layoutManager = new GridLayoutManager(MainActivity.this, gridColumnCount);
-                                            recyclerView.setLayoutManager(layoutManager);
-                                            recyclerView.setAdapter(launchNextAdapter);
+                                                // Handles RecyclerView stutter scrolling
+                                                recyclerView.setHasFixedSize(true);
+                                                recyclerView.setItemViewCacheSize(20);
+                                                recyclerView.setDrawingCacheEnabled(true);
+
+                                                recyclerView.setAdapter(launchNextAdapter);
+                                                // Hide empty textview if data is available
+                                                emptyDataTextView.setVisibility(View.INVISIBLE);
+                                            } else {
+                                                // Show empty textview if data is unavailable
+                                                emptyDataTextView.setVisibility(View.VISIBLE);
+
+                                                // Show AnimationView for result not found
+                                                notFoundAnimationView.setVisibility(View.VISIBLE);
+                                            }
 
                                             // Remove refresh button when done
                                             launchSwipeRefreshLayout.setRefreshing(false);
@@ -1075,6 +1263,12 @@ public class MainActivity extends AppCompatActivity {
                                             Toast.makeText(MainActivity.this,
                                                     "Unable to load the list.\nPlease check your connection"
                                                     , Toast.LENGTH_LONG).show();
+
+                                            // Show Animation Network not found
+                                            networkLostAnimationView.setVisibility(View.VISIBLE);
+
+                                            // Hide AnimationView Loading
+                                            loadingListAnimationView.setVisibility(View.GONE);
                                         }
 
                                         @Override
@@ -1109,7 +1303,7 @@ public class MainActivity extends AppCompatActivity {
         Date currentTime = Calendar.getInstance().getTime();
 
         // Debug Toast for nextLaunchTime
-        Toast.makeText(MainActivity.this, currentTime.toString(), Toast.LENGTH_LONG).show();
+        // Toast.makeText(MainActivity.this, currentTime.toString(), Toast.LENGTH_LONG).show();
 
         // Get the difference between current time and next launch time
         long diffInMs = nextLaunchTime.getTime() - currentTime.getTime();
@@ -1249,32 +1443,5 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * This method sets about me screen
-     */
-    private void setAboutMe(){
-        AboutView view = AboutBuilder.with(this)
-                .setPhoto(R.mipmap.profile_picture)
-                .setCover(R.mipmap.profile_cover)
-                .setName("Roby Hartono")
-                .setSubTitle("Mobile Developer")
-                .setBrief("I'm warmed of mobile technologies. Ideas maker, curious and nature lover. Like basketball and video games.")
-                .setAppIcon(R.mipmap.ic_launcher)
-                .setAppName(R.string.app_name)
-                //TODO add google play store link
-                .addGooglePlayStoreLink("8002078663318221363")
-                .addGitHubLink("user")
-                .addFacebookLink("user")
-                .addFiveStarsAction()
-                .setVersionNameAsAppSubTitle()
-                .addShareAction(R.string.app_name)
-                .setWrapScrollView(true)
-                .setLinksAnimated(true)
-                .setShowAsCard(true)
-                .build();
-
-
-         addContentView(view, new FrameLayout.LayoutParams(ActionBar.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-    }
 }
 
