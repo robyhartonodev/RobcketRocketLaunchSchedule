@@ -45,7 +45,7 @@ public final class GlobalConstants {
 
     /**
      * Filter variables for location (actually pad)
-     * 5,6,7,8    : Jiuquan, People's Republic of China
+     * 1    : Jiuquan, People's Republic of China
      * 2    : Taiyuan, People's Republic of China
      * 3    : Kourou, French Guiana
      * 4    : Hammaguir, Algeria
@@ -64,7 +64,7 @@ public final class GlobalConstants {
      * 17   : Kennedy Space Center, FL, USA
      * 18   : Vandenberg AFB, CA, USA
      * 19   : Wallops Island, Virginia, USA
-     * 1,2,3,4   : Woomera, Australia
+     * 20   : Woomera, Australia
      * 24   : Kiatorete Spit, New Zealand
      * 25   : Xichang Satellite Launch Center, People's Republic of China
      * 26   : Negev, State of Israel

@@ -32,7 +32,7 @@ public class OnBoardActivity extends WelcomeActivity {
                 )
                 .page(new BasicPage(R.drawable.ic_iconfinder_astronaut,
                         "FILTER",
-                       "Follow your desired rocket launch by agencies like NASA, SpaceX, etc.")
+                       "Follow your desired rocket launch by agencies or by locations like NASA, SpaceX, etc.")
                         .background(R.color.secondaryLightColor)
                 )
                 .swipeToDismiss(true)

@@ -209,10 +209,6 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             result.openDrawer();
             return true;
-        } else if (id == R.id.action_tutorial) {
-            // Show the OnBoarding / Tutorial screen
-            welcomeHelper.forceShow();
-            return true;
         } else if (id == R.id.action_about) {
             Intent aboutIntent = new Intent(this, AboutMeActivity.class);
             startActivity(aboutIntent);
@@ -254,17 +250,11 @@ public class MainActivity extends AppCompatActivity {
             launchNextCall.enqueue(new Callback<LaunchNextList>() {
                 @Override
                 public void onResponse(Call<LaunchNextList> call, Response<LaunchNextList> response) {
-                    // Set next launch string variable with the next launch time from json response
-                    nextLaunchTimerString = response.body().getLaunches().get(0).getWindowstart();
-
-                    // Set the Countdown Timer
-                    setCountDownTimer();
-
-                    // Set the Notification Function
-                    setNextLaunchNotification();
 
                     // Populate the launch list
-                    finalLaunchNextList.addAll(response.body().getLaunches());
+                    if (response.body() != null) {
+                        finalLaunchNextList.addAll(response.body().getLaunches());
+                    }
 
                     // Remove unconfirmed launches if checked in filter
                     if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.unconfirmedSwitchPref, false)) {
@@ -283,6 +273,9 @@ public class MainActivity extends AppCompatActivity {
                         finalLaunchNextList.addAll(confirmedLaunches);
                     }
 
+                    // Filter the launch by location
+                    filterByLocation();
+
                     // Populate the mission list
                     for (int i = 0; i < finalLaunchNextList.size(); i++) {
                         if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
@@ -293,6 +286,15 @@ public class MainActivity extends AppCompatActivity {
 
                     // If finalLaunchNextList is empty then show textview empty data
                     if (!finalLaunchNextList.isEmpty()) {
+                        // Set next launch string variable with the next launch time from json response
+                        nextLaunchTimerString = finalLaunchNextList.get(0).getWindowstart();
+
+                        // Set the Countdown Timer
+                        setCountDownTimer();
+
+                        // Set the Notification Function
+                        setNextLaunchNotification();
+
                         recyclerView = findViewById(R.id.recycler_view_notice_list);
                         launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
 
@@ -348,6 +350,9 @@ public class MainActivity extends AppCompatActivity {
 
                     // Hide AnimationView Loading
                     loadingListAnimationView.setVisibility(View.GONE);
+
+                    // Hide AnimationView Not found
+                    notFoundAnimationView.setVisibility(View.GONE);
                 }
             });
         } // end if
@@ -449,6 +454,9 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             });
 
+                            // Filter the launch by location
+                            filterByLocation();
+
                             for (int i = 0; i < finalLaunchNextList.size(); i++) {
                                 if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
                                     missionListSorted.add(new Mission("TBD", "No Information available"));
@@ -509,6 +517,9 @@ public class MainActivity extends AppCompatActivity {
 
                             // Hide AnimationView Loading
                             loadingListAnimationView.setVisibility(View.GONE);
+
+                            // Hide AnimationView Not found
+                            notFoundAnimationView.setVisibility(View.GONE);
                         }
 
                         @Override
@@ -604,105 +615,105 @@ public class MainActivity extends AppCompatActivity {
                 );
 
 
-        // Location Filter List
-//        ExpandableDrawerItem itemFilterLocation = new ExpandableDrawerItem()
-//                .withIdentifier(3)
-//                .withName("Filter by locations")
-//                .withIcon(FontAwesome.Icon.faw_globe_americas)
-//                .withSelectable(false)
-//                .withSubItems(
-//                        new SwitchDrawerItem().withName("Jiuquan, China").withLevel(2).withIdentifier(13)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationJiuquan, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Taiyuan, China").withLevel(2).withIdentifier(14)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationTaiyuan, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Kourou, French Guiana").withLevel(2).withIdentifier(15)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKourou, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Hammaguir, Algeria").withLevel(2).withIdentifier(16)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationHammaguir, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Sriharikota, India").withLevel(2).withIdentifier(17)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSriharikota, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Semnan, Iran").withLevel(2).withIdentifier(18)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSemnan, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Kenya").withLevel(2).withIdentifier(19)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKenya, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Kagoshima, Japan").withLevel(2).withIdentifier(20)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKagoshima, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Tanegashima, Japan").withLevel(2).withIdentifier(21)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationTanegashima, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Baikonur Cosmodrome, Kazakhstan").withLevel(2).withIdentifier(22)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationBaikonur, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Plesetsk Cosmodrome, Russia").withLevel(2).withIdentifier(23)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationPlesetsk, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Kapustin Yar, Russia").withLevel(2).withIdentifier(24)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKapustin, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Svobodney Cosmodrome, Russia").withLevel(2).withIdentifier(25)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSvobodney, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Dombarovskiy, Russia").withLevel(2).withIdentifier(26)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationDombarovskiy, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Sea Launch").withLevel(2).withIdentifier(27)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSea, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Cape Canaveral, USA").withLevel(2).withIdentifier(28)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationCape, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Kennedy Space Center, USA").withLevel(2).withIdentifier(29)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKennedy, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Vandenberg AFB, USA").withLevel(2).withIdentifier(30)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationVandenberg, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Wallops Island, USA").withLevel(2).withIdentifier(31)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWallops, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Woomera, Australia").withLevel(2).withIdentifier(32)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWoomera, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Kiatorete Spit, New Zealand").withLevel(2).withIdentifier(33)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKiatorete, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Xichang, China").withLevel(2).withIdentifier(34)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationXichang, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Negev, Israel").withLevel(2).withIdentifier(35)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationNegev, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Palmachim Airbase, Israel").withLevel(2).withIdentifier(36)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationPalmachim, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Kauai, USA").withLevel(2).withIdentifier(37)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKauai, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Ohae, Korea").withLevel(2).withIdentifier(38)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationOhae, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Naro Space Center, South Korea").withLevel(2).withIdentifier(39)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationNaro, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Kodiak, USA").withLevel(2).withIdentifier(40)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKodiak, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Wenchang, China").withLevel(2).withIdentifier(41)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWenchang, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
-//                        new SwitchDrawerItem().withName("Unknown Location").withLevel(2).withIdentifier(42)
-//                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationUnknown, false))
-//                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener)
-//
-//                );
+        //Location Filter List
+        ExpandableDrawerItem itemFilterLocation = new ExpandableDrawerItem()
+                .withIdentifier(3)
+                .withName("Filter by locations")
+                .withIcon(FontAwesome.Icon.faw_globe_americas)
+                .withSelectable(false)
+                .withSubItems(
+                        new SwitchDrawerItem().withName("Jiuquan, China").withLevel(2).withIdentifier(13)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationJiuquan, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Taiyuan, China").withLevel(2).withIdentifier(14)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationTaiyuan, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Kourou, French Guiana").withLevel(2).withIdentifier(15)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKourou, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Hammaguir, Algeria").withLevel(2).withIdentifier(16)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationHammaguir, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Sriharikota, India").withLevel(2).withIdentifier(17)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSriharikota, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Semnan, Iran").withLevel(2).withIdentifier(18)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSemnan, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Kenya").withLevel(2).withIdentifier(19)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKenya, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Kagoshima, Japan").withLevel(2).withIdentifier(20)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKagoshima, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Tanegashima, Japan").withLevel(2).withIdentifier(21)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationTanegashima, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Baikonur Cosmodrome, Kazakhstan").withLevel(2).withIdentifier(22)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationBaikonur, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Plesetsk Cosmodrome, Russia").withLevel(2).withIdentifier(23)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationPlesetsk, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Kapustin Yar, Russia").withLevel(2).withIdentifier(24)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKapustin, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Svobodney Cosmodrome, Russia").withLevel(2).withIdentifier(25)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSvobodney, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Dombarovskiy, Russia").withLevel(2).withIdentifier(26)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationDombarovskiy, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Sea Launch").withLevel(2).withIdentifier(27)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSea, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Cape Canaveral, USA").withLevel(2).withIdentifier(28)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationCape, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Kennedy Space Center, USA").withLevel(2).withIdentifier(29)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKennedy, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Vandenberg AFB, USA").withLevel(2).withIdentifier(30)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationVandenberg, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Wallops Island, USA").withLevel(2).withIdentifier(31)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWallops, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Woomera, Australia").withLevel(2).withIdentifier(32)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWoomera, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Kiatorete Spit, New Zealand").withLevel(2).withIdentifier(33)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKiatorete, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Xichang, China").withLevel(2).withIdentifier(34)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationXichang, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Negev, Israel").withLevel(2).withIdentifier(35)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationNegev, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Palmachim Airbase, Israel").withLevel(2).withIdentifier(36)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationPalmachim, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Kauai, USA").withLevel(2).withIdentifier(37)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKauai, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Ohae, Korea").withLevel(2).withIdentifier(38)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationOhae, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Naro Space Center, South Korea").withLevel(2).withIdentifier(39)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationNaro, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Kodiak, USA").withLevel(2).withIdentifier(40)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKodiak, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Wenchang, China").withLevel(2).withIdentifier(41)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWenchang, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener),
+                        new SwitchDrawerItem().withName("Unknown Location").withLevel(2).withIdentifier(42)
+                                .withChecked(filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationUnknown, false))
+                                .withSelectable(false).withOnCheckedChangeListener(onCheckedChangeListener)
+
+                );
 
         //create the drawer and remember the `Drawer` result object
         result = new DrawerBuilder()
@@ -719,9 +730,9 @@ public class MainActivity extends AppCompatActivity {
                         new DividerDrawerItem(),
                         itemUnconfirmed,
                         new DividerDrawerItem(),
-                        itemFilterAgency
-                        //new DividerDrawerItem(),
-                        //itemFilterLocation
+                        itemFilterAgency,
+                        new DividerDrawerItem(),
+                        itemFilterLocation
                 )
                 .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
@@ -810,156 +821,126 @@ public class MainActivity extends AppCompatActivity {
                     case 12:
                         filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterAgencyRocketLabLtd, isChecked).apply();
                         break;
-//                    // Jiuquan
-//                    case 13:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationJiuquan, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Taiyuan
-//                    case 14:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationTaiyuan, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Kourou
-//                    case 15:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKourou, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Hammaguir
-//                    case 16:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationHammaguir, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Sriharikota
-//                    case 17:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSriharikota, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Semnan
-//                    case 18:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSemnan, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Kenya
-//                    case 19:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKenya, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Kagoshima
-//                    case 20:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKagoshima, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Tanegashima
-//                    case 21:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationTanegashima, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Baikonur
-//                    case 22:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationBaikonur, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Plesetsk
-//                    case 23:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationPlesetsk, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Kapustin
-//                    case 24:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKapustin, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Svobodney
-//                    case 25:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSvobodney, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Dombarovskiy
-//                    case 26:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationDombarovskiy, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Sea Launch
-//                    case 27:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationSea, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Cape
-//                    case 28:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationCape, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Kennedy
-//                    case 29:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKennedy, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Vandenberg
-//                    case 30:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationVandenberg, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Wallops
-//                    case 31:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationWallops, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Woomera
-//                    case 32:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationWoomera, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Kiatorete
-//                    case 33:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKiatorete, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Xichang
-//                    case 34:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationXichang, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Negev
-//                    case 35:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationNegev, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Palmachim
-//                    case 36:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationPalmachim, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Kauai
-//                    case 37:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKauai, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Ohae
-//                    case 38:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationOhae, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Naro
-//                    case 39:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationNaro, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Kodiak
-//                    case 40:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationKodiak, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Wenchang
-//                    case 41:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationWenchang, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
-//                    // Unknown
-//                    case 42:
-//                        preferencesEditor.putBoolean(GlobalConstants.filterLocationUnknown, isChecked);
-//                        preferencesEditor.apply();
-//                        break;
+                    // Jiuquan
+                    case 13:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationJiuquan, isChecked).apply();
+                        break;
+                    // Taiyuan
+                    case 14:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationTaiyuan, isChecked).apply();
+                        break;
+                    // Kourou
+                    case 15:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationKourou, isChecked).apply();
+                        break;
+                    // Hammaguir
+                    case 16:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationHammaguir, isChecked).apply();
+                        break;
+                    // Sriharikota
+                    case 17:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationSriharikota, isChecked).apply();
+                        break;
+                    // Semnan
+                    case 18:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationSemnan, isChecked).apply();
+                        break;
+                    // Kenya
+                    case 19:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationKenya, isChecked).apply();
+                        break;
+                    // Kagoshima
+                    case 20:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationKagoshima, isChecked).apply();
+                        break;
+                    // Tanegashima
+                    case 21:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationTanegashima, isChecked).apply();
+                        break;
+                    // Baikonur
+                    case 22:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationBaikonur, isChecked).apply();
+                        break;
+                    // Plesetsk
+                    case 23:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationPlesetsk, isChecked).apply();
+                        break;
+                    // Kapustin
+                    case 24:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationKapustin, isChecked).apply();
+                        break;
+                    // Svobodney
+                    case 25:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationSvobodney, isChecked).apply();
+                        break;
+                    // Dombarovskiy
+                    case 26:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationDombarovskiy, isChecked).apply();
+                        break;
+                    // Sea Launch
+                    case 27:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationSea, isChecked).apply();
+                        break;
+                    // Cape
+                    case 28:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationCape, isChecked).apply();
+                        break;
+                    // Kennedy
+                    case 29:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationKennedy, isChecked).apply();
+                        break;
+                    // Vandenberg
+                    case 30:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationVandenberg, isChecked).apply();
+                        break;
+                    // Wallops
+                    case 31:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationWallops, isChecked).apply();
+                        break;
+                    // Woomera
+                    case 32:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationWoomera, isChecked).apply();
+                        break;
+                    // Kiatorete
+                    case 33:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationKiatorete, isChecked).apply();
+                        break;
+                    // Xichang
+                    case 34:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationXichang, isChecked).apply();
+                        break;
+                    // Negev
+                    case 35:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationNegev, isChecked).apply();
+                        break;
+                    // Palmachim
+                    case 36:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationPalmachim, isChecked).apply();
+                        break;
+                    // Kauai
+                    case 37:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationKauai, isChecked).apply();
+                        break;
+                    // Ohae
+                    case 38:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationOhae, isChecked).apply();
+                        break;
+                    // Naro
+                    case 39:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationNaro, isChecked).apply();
+                        break;
+                    // Kodiak
+                    case 40:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationKodiak, isChecked).apply();
+                        break;
+                    // Wenchang
+                    case 41:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationWenchang, isChecked).apply();
+                        break;
+                    // Unknown
+                    case 42:
+                        filterSettingsSharedPreferences.edit().putBoolean(GlobalConstants.filterLocationUnknown, isChecked).apply();
+                        break;
                     default:
                         break;
                 } // end switch case
@@ -1006,14 +987,11 @@ public class MainActivity extends AppCompatActivity {
                             launchNextCall.enqueue(new Callback<LaunchNextList>() {
                                 @Override
                                 public void onResponse(Call<LaunchNextList> call, Response<LaunchNextList> response) {
-                                    // Set next launch string variable with the next launch time from json response
-                                    nextLaunchTimerString = response.body().getLaunches().get(0).getWindowstart();
-
-                                    // Set the Countdown Timer
-                                    setCountDownTimer();
 
                                     // Populate the launch list
-                                    finalLaunchNextList.addAll(response.body().getLaunches());
+                                    if (response.body() != null) {
+                                        finalLaunchNextList.addAll(response.body().getLaunches());
+                                    }
 
                                     // Remove unconfirmed launches if checked in filter
                                     if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.unconfirmedSwitchPref, false)) {
@@ -1032,6 +1010,9 @@ public class MainActivity extends AppCompatActivity {
                                         finalLaunchNextList.addAll(confirmedLaunches);
                                     }
 
+                                    // Filter the launch by location
+                                    filterByLocation();
+
                                     for (int i = 0; i < finalLaunchNextList.size(); i++) {
                                         if (finalLaunchNextList.get(i).getMissions().isEmpty()) {
                                             missionListSorted.add(new Mission("TBD", "No Information available"));
@@ -1041,6 +1022,15 @@ public class MainActivity extends AppCompatActivity {
 
                                     // If finalLaunchNextList is empty then show textview empty data
                                     if (!finalLaunchNextList.isEmpty()) {
+                                        // Set next launch string variable with the next launch time from json response
+                                        nextLaunchTimerString = finalLaunchNextList.get(0).getWindowstart();
+
+                                        // Set the Countdown Timer
+                                        setCountDownTimer();
+
+                                        // Set the Notification Function
+                                        setNextLaunchNotification();
+
                                         recyclerView = findViewById(R.id.recycler_view_notice_list);
                                         launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
 
@@ -1105,6 +1095,9 @@ public class MainActivity extends AppCompatActivity {
 
                                     // Hide AnimationView Loading
                                     loadingListAnimationView.setVisibility(View.GONE);
+
+                                    // Hide AnimationView Not found
+                                    notFoundAnimationView.setVisibility(View.GONE);
                                 }
                             });
                         } // end if
@@ -1193,6 +1186,9 @@ public class MainActivity extends AppCompatActivity {
                                                 finalLaunchNextList.addAll(confirmedLaunches);
                                             }
 
+                                            // Filter the launch by location
+                                            filterByLocation();
+
                                             // Sort the final launch next list based on date
                                             Collections.sort(finalLaunchNextList, new Comparator<Launch>() {
                                                 @Override
@@ -1222,6 +1218,9 @@ public class MainActivity extends AppCompatActivity {
 
                                                 // Set the Countdown Timer
                                                 setCountDownTimer();
+
+                                                // Set the Notification Function
+                                                setNextLaunchNotification();
 
                                                 recyclerView = findViewById(R.id.recycler_view_notice_list);
                                                 launchNextAdapter = new LaunchNextAdapter(MainActivity.this, finalLaunchNextList, missionListSorted);
@@ -1269,6 +1268,9 @@ public class MainActivity extends AppCompatActivity {
 
                                             // Hide AnimationView Loading
                                             loadingListAnimationView.setVisibility(View.GONE);
+
+                                            // Hide AnimationView Not found
+                                            notFoundAnimationView.setVisibility(View.GONE);
                                         }
 
                                         @Override
@@ -1440,6 +1442,260 @@ public class MainActivity extends AppCompatActivity {
             if (alarmManager != null) {
                 alarmManager.cancel(notifyPendingIntent);
             }
+        }
+    }
+
+    /**
+     * This method handles filter by location inside generateLaunchList method
+     */
+    private void filterByLocation() {
+        // If at least a filter by location is checked then do the filter by location
+        if ((filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationJiuquan, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationTaiyuan, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKourou, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationHammaguir, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSriharikota, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSemnan, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKenya, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKagoshima, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationTanegashima, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationBaikonur, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationPlesetsk, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKapustin, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSvobodney, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSea, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationCape, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKennedy, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationVandenberg, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWallops, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWoomera, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKiatorete, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationXichang, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationNegev, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationPalmachim, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKauai, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationOhae, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationNaro, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKodiak, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWenchang, false) ||
+                filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationUnknown, false)
+        )) {
+            // Create an empty ArrayList Launch
+            List<Launch> tempFinalLaunchList = new ArrayList<>();
+
+            // Jiuquan
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationJiuquan, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Jiuquan, People's Republic of China"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+            // Taiyuan
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationTaiyuan, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Taiyuan, People's Republic of China"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+            // Kourou
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKourou, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Kourou, French Guiana"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Hammaguir
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationHammaguir, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Hammaguir, Algeria"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Sriharikota
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSriharikota, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Sriharikota, Republic of India"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Semnan
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSemnan, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Semnan Space Center, Islamic Republic of Iran"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Kenya
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKenya, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Kenya"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Kagoshima
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKagoshima, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Kagoshima, Japan"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Tanegashima
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationTanegashima, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Tanegashima, Japan"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Baikonur
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationBaikonur, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Baikonur Cosmodrome, Republic of Kazakhstan"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Plestsk
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationPlesetsk, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Plesetsk Cosmodrome, Russian Federation"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Kapustin
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKapustin, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Kapustin Yar, Russian Federation"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Svobodney
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSvobodney, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Svobodney Cosmodrome, Russian Federation"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Dombarovskiy
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationDombarovskiy, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Dombarovskiy, Russian Federation"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            //Sea Launch
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationSea, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Sea Launch"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Cape
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationCape, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Cape Canaveral, FL, USA"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Kennedy
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKennedy, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Kennedy Space Center, FL, USA"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Vandenberg
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationVandenberg, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Vandenberg AFB, CA, USA"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Wallops
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWallops, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Wallops Island, Virginia, USA"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Woomera
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWoomera, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Woomera, Australia"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            //Kiatorete
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKiatorete, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Kiatorete Spit, New Zealand"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Xichang
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationXichang, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Xichang Satellite Launch Center, People's Republic of China"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Negev
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationNegev, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Negev, State of Israel"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Palmachim
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationPalmachim, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Palmachim Airbase, State of Israel"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Kauai
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKauai, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Kauai, USA"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Ohae
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationOhae, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Ohae Satellite Launching station, Democratic People's Republic of Korea"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Naro
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationNaro, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Naro Space Center, South Korea"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Kodiak
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationKodiak, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Kodiak Launch Complex, Alaska, USA"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Wenchang
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationWenchang, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Wenchang Satellite Launch Center, People's Republic of China"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Unknown
+            if (filterSettingsSharedPreferences.getBoolean(GlobalConstants.filterLocationUnknown, false))
+                for (int i = 0; i < finalLaunchNextList.size(); i++) {
+                    if (finalLaunchNextList.get(i).getLocation().getName().equals("Unknown Location"))
+                        tempFinalLaunchList.add(finalLaunchNextList.get(i));
+                }
+
+            // Empty List
+            finalLaunchNextList.clear();
+
+            // Add all elements from tempFinalLaunchList to finalLaunchList
+            finalLaunchNextList.addAll(tempFinalLaunchList);
         }
     }
 

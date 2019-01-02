@@ -33,7 +33,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawableStart="@drawable/ic_info"
-                    android:drawableLeft="@drawable/ic_info"
                     android:drawablePadding="4dp"
                     android:text="Details"
                     android:textSize="20sp"
@@ -115,7 +114,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:drawableStart="@drawable/ic_assignment"
-                    android:drawableLeft="@drawable/ic_assignment"
                     android:drawablePadding="4dp"
                     android:text="Mission"
                     android:textSize="20sp"
@@ -134,7 +132,9 @@
                     android:id="@+id/textview_launch_mission_details"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Mission Details" />
+                    android:gravity="center"
+                    android:text="Mission Details"
+                    android:textAlignment="center" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
