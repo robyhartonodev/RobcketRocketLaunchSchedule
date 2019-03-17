@@ -1,4 +1,4 @@
-# RobcketRocketLaunchSchedule
+# Space Launch Next - Robket 
 Rocket Launch Schedule App for Android using https://launchlibrary.net API 
 
 <p align="center">
