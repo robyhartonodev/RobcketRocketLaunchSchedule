@@ -8,7 +8,7 @@ Rocket Launch Schedule App for Android using https://launchlibrary.net API
 </p>
 
 # Features 
-- A schedule for upcoming rocket launches.
+- A schedule for upcoming rocket launches. (Autodetect and adjust Timezone)
 - Details for each launch
 - Notifications for upcoming launches (toggle in settings).
 - Countdown to the next space launch
