@@ -32,3 +32,4 @@ Rocket Launch Schedule App for Android using https://launchlibrary.net API
 - Refactoring to a known design pattern like MVC, MVP or MVVM (maybe not)
 - Cooler Notification
 - Better screenshot / phone template in playstore
+- Better ui for tablets 
