@@ -31,3 +31,4 @@ Rocket Launch Schedule App for Android using https://launchlibrary.net API
 - Add Avatar Image on Filter 
 - Refactoring to a known design pattern like MVC, MVP or MVVM (maybe not)
 - Cooler Notification
+- Better screenshot / phone template in playstore
