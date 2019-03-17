@@ -13,8 +13,8 @@ Google Playstore Link : https://play.google.com/store/apps/details?id=com.roby.a
 - Filter by locations
 
 # Preview 
-![robket-phone-portrait](https://user-images.githubusercontent.com/17837057/51090815-76554d80-1782-11e9-9cfb-8d8ccf0b0f65.png) 
-![settings-filter-phone](https://user-images.githubusercontent.com/17837057/51090819-84a36980-1782-11e9-95ab-54cf0198a37f.png)
+<img src="https://user-images.githubusercontent.com/17837057/51090815-76554d80-1782-11e9-9cfb-8d8ccf0b0f65.png" height=500 width=300>
+<img src="https://user-images.githubusercontent.com/17837057/51090819-84a36980-1782-11e9-95ab-54cf0198a37f.png" height=500 width=300>
 
 # TODO 
 - Testing (Unit, Integration, etc.)
