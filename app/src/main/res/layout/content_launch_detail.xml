@@ -167,8 +167,9 @@
                     android:id="@+id/textview_launch_rocket_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:gravity="center"
-                    android:linksClickable="true"
                     android:text="Rocket Name"
                     android:textColorLink="@color/secondaryColor"
                     android:textSize="16sp" />
@@ -240,8 +241,9 @@
                     android:id="@+id/textview_launch_agency"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:gravity="center"
-                    android:linksClickable="true"
                     android:text="Agency Name"
                     android:textColorLink="@color/secondaryColor"
                     android:textSize="16sp" />

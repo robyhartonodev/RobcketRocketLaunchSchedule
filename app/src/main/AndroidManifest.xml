@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.example.android.robcket_rocketlaunchschedule">
+    package="com.roby.android.robcket_rocketlaunchschedule">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -18,7 +18,9 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
+
                 <action android:name="android.intent.action.VIEW" />
             </intent-filter>
         </activity>
@@ -32,7 +34,7 @@
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.android.robcket_rocketlaunchschedule.activity.MainActivity" />
+                android:value="com.roby.android.robcket_rocketlaunchschedule.activity.MainActivity" />
         </activity>
 
         <receiver
@@ -46,18 +48,23 @@
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.android.robcket_rocketlaunchschedule.activity.MainActivity" />
+                android:value="com.roby.android.robcket_rocketlaunchschedule.activity.MainActivity" />
         </activity>
-
         <activity
             android:name=".activity.LicenseActivity"
             android:label="@string/license"
             android:parentActivityName=".activity.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.android.robcket_rocketlaunchschedule.activity.MainActivity" />
+                android:value="com.roby.android.robcket_rocketlaunchschedule.activity.MainActivity" />
         </activity>
-
+        <activity
+            android:name=".activity.WebViewActivity"
+            android:parentActivityName=".activity.LaunchDetailActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.roby.android.robcket_rocketlaunchschedule.activity.LaunchDetailActivity" />
+        </activity>
     </application>
 
 </manifest>
