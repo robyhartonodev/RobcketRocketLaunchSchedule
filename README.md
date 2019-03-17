@@ -25,4 +25,4 @@ Google Playstore Link : https://play.google.com/store/apps/details?id=com.roby.a
 - Font consistency ? 
 - Add Youtube / Streamplayer for youtube livestream in DetailActivity
 - Add Avatar Image on Filter 
-- Refactoring to a known design pattern (maybe not)
+- Refactoring to a known design pattern like MVC, MVP or MVVM (maybe not)
