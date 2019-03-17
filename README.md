@@ -21,7 +21,8 @@ Google Playstore Link : https://play.google.com/store/apps/details?id=com.roby.a
 - Implement CI/CD , Fastlane ? 
 - Improve Timer UI for next launches
 - Add Past Launches Screen / Activity ( Possibly)
-- Create Drawer for Navigation ( Because new Screen / Pages)
+- Create Drawer for Navigation ( Because new Screen / Activities)
 - Font consistency ? 
+- Add Youtube / Streamplayer for youtube livestream in DetailActivity
 - Add Avatar Image on Filter 
 - Refactoring to a known design pattern (maybe not)
