@@ -7,8 +7,6 @@ Rocket Launch Schedule App for Android using https://launchlibrary.net API
   </a>
 </p>
 
-Google Playstore Link : https://play.google.com/store/apps/details?id=com.roby.android.robcket_rocketlaunchschedule
-
 # Features 
 - A schedule for upcoming rocket launches.
 - Details for each launch
