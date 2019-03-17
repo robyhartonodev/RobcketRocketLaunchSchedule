@@ -1,6 +1,12 @@
 # RobcketRocketLaunchSchedule
 Rocket Launch Schedule App for Android using https://launchlibrary.net API 
 
+<p align="center">
+  <a href="https://play.google.com/store/apps/details?id=com.roby.android.robcket_rocketlaunchschedule">
+    <img src="https://cdn.rawgit.com/steverichey/google-play-badge-svg/master/img/en_get.svg" width="50%">
+  </a>
+</p>
+
 Google Playstore Link : https://play.google.com/store/apps/details?id=com.roby.android.robcket_rocketlaunchschedule
 
 # Features 
