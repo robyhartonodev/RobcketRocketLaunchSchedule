@@ -22,6 +22,7 @@ Rocket Launch Schedule App for Android using https://launchlibrary.net API
 
 # TODO - Ideas
 - Testing (Unit, Integration, etc.)
+- Add MyLaunchList Functionality
 - Implement CI/CD , Fastlane ? 
 - Improve Countdown Timer UI for next launches
 - Add Past Launches Screen / Activity ( Possibly)
