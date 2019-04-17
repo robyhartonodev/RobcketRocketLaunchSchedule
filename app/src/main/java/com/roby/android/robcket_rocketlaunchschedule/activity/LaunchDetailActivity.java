@@ -1,10 +1,18 @@
 package com.roby.android.robcket_rocketlaunchschedule.activity;
 
 import android.content.Intent;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 
+import com.blogspot.atifsoftwares.animatoolib.Animatoo;
+import com.getkeepsafe.taptargetview.TapTarget;
+import com.getkeepsafe.taptargetview.TapTargetView;
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.roby.android.robcket_rocketlaunchschedule.R;
+import com.roby.android.robcket_rocketlaunchschedule.utils.AppBarStateChangeListener;
 import com.roby.android.robcket_rocketlaunchschedule.utils.URLSpanNoUnderline;
 import com.squareup.picasso.Picasso;
 
@@ -25,14 +33,18 @@ import android.widget.Toast;
 public class LaunchDetailActivity extends AppCompatActivity {
 
     // Variables for toolbar
+    private AppBarLayout mAppBarLayout;
     private ImageView mLaunchRocketImageView;
     private TextView mLaunchTitleTextView;
+    private FloatingActionButton mShareFloatingActionButton;
+    private FloatingActionButton mWatchFloatingActionButton;
+
 
     // Variables for Details
     private TextView mLaunchDateTextView;
     private TextView mLaunchWindowTextView;
-    private Button mLaunchWatchButton;
-    private Button mLaunchShareButton;
+    // private Button mLaunchWatchButton;
+    // private Button mLaunchShareButton;
 
     // Variables for Missions
     private TextView mLaunchMissionNameTextView;
@@ -63,11 +75,21 @@ public class LaunchDetailActivity extends AppCompatActivity {
     private String AGENCY_WIKI_URL_EXTRA = "LAUNCH_AGENCY_WIKI_URL";
 
     @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        // Add back animation
+        Animatoo.animateZoom(this);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch_detail);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        // AppBarLayout
+        mAppBarLayout = findViewById(R.id.detail_app_bar);
 
         // Display back button on toolbar
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -83,6 +105,9 @@ public class LaunchDetailActivity extends AppCompatActivity {
         // Set title of toolbar with launch name
         getSupportActionBar().setTitle(getIntent().getStringExtra(LAUNCH_TITLE_EXTRA));
 
+        // Set Floating Action Button on the collapsing toolbar
+        setFabButton();
+
         // Set Details CardView information
         setDetailInformation();
 
@@ -97,6 +122,59 @@ public class LaunchDetailActivity extends AppCompatActivity {
 
         // Set Agency CardView information
         setAgencyInformation();
+    }
+
+    /**
+     * This Method sets the floating action buttons on the collapsing app toolbar
+     */
+    private void setFabButton() {
+        // Set Floating Action Button Share
+        mShareFloatingActionButton = findViewById(R.id.fab_share);
+
+        // Set Floating Action Button Watch
+        mWatchFloatingActionButton = findViewById(R.id.fab_watch);
+
+
+        // Set onClickListener for share button
+        mShareFloatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Share the launch
+                setTapViewShare();
+            }
+        });
+
+        // Set onClickListener for watch button
+        mWatchFloatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Watch the launch
+                setTapViewWatch();
+            }
+        });
+
+        // Hide the LinearLayout that contains these buttons when app bar collapsed or expanded
+        // These sequences below use the abstract class in utils folder AppBarStateChangeListener
+        mAppBarLayout.addOnOffsetChangedListener(new AppBarStateChangeListener() {
+            @Override
+            public void onStateChanged(AppBarLayout appBarLayout, State state) {
+                switch (state) {
+                    case COLLAPSED:
+                        mWatchFloatingActionButton.hide();
+                        mShareFloatingActionButton.hide();
+                        break;
+                    case EXPANDED:
+                        mWatchFloatingActionButton.show();
+                        mShareFloatingActionButton.show();
+                        break;
+                    case IDLE:
+                        mWatchFloatingActionButton.show();
+                        mShareFloatingActionButton.show();
+                        break;
+                }
+            }
+        });
+
     }
 
     /**
@@ -124,41 +202,6 @@ public class LaunchDetailActivity extends AppCompatActivity {
         mLaunchWindowTextView = findViewById(R.id.textview_window_value);
         mLaunchWindowTextView.setText(getIntent().getStringExtra(LAUNCH_WINDOW_EXTRA));
 
-        // Set Watch Button
-        mLaunchWatchButton = findViewById(R.id.button_watch);
-        mLaunchWatchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Get Url from extra
-                String url = getIntent().getStringExtra(LAUNCH_VID_URL_EXTRA);
-
-                // If url string is empty then show Toast that says no stream available
-                if (!url.equals("empty")) {
-                    // Set Intent to redirect to link
-                    Intent watchIntent = new Intent(Intent.ACTION_VIEW);
-                    watchIntent.setData(Uri.parse(url));
-                    startActivity(watchIntent);
-                } else {
-                    Toast.makeText(LaunchDetailActivity.this, "No live stream found for the launch", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        // Set Share Button
-        mLaunchShareButton = findViewById(R.id.button_share);
-        mLaunchShareButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent shareIntent = new Intent();
-                shareIntent.setAction(Intent.ACTION_SEND);
-                shareIntent.putExtra(Intent.EXTRA_TEXT, String.format("Catch the launch of the %s by %s on %s",
-                        getIntent().getStringExtra(LAUNCH_TITLE_EXTRA),
-                        getIntent().getStringExtra(AGENCY_NAME_EXTRA),
-                        getIntent().getStringExtra(LAUNCH_DATE_EXTRA)));
-                shareIntent.setType("text/plain");
-                startActivity(shareIntent);
-            }
-        });
     }
 
     /**
@@ -186,6 +229,9 @@ public class LaunchDetailActivity extends AppCompatActivity {
                 rocketWebViewIntent.putExtra(ROCKET_WIKI_URL_EXTRA, getIntent().getStringExtra(ROCKET_WIKI_URL_EXTRA));
                 rocketWebViewIntent.putExtra(ROCKET_NAME_EXTRA, getIntent().getStringExtra(ROCKET_NAME_EXTRA));
                 startActivity(rocketWebViewIntent);
+
+                // Animation to WebView Activity
+                Animatoo.animateZoom(LaunchDetailActivity.this);
             }
         });
 
@@ -241,6 +287,9 @@ public class LaunchDetailActivity extends AppCompatActivity {
                 agencyWebViewIntent.putExtra(AGENCY_WIKI_URL_EXTRA, getIntent().getStringExtra(AGENCY_WIKI_URL_EXTRA));
                 agencyWebViewIntent.putExtra(AGENCY_NAME_EXTRA, getIntent().getStringExtra(AGENCY_NAME_EXTRA));
                 startActivity(agencyWebViewIntent);
+
+                // Animation to WebView Activity
+                Animatoo.animateZoom(LaunchDetailActivity.this);
             }
         });
 
@@ -270,6 +319,94 @@ public class LaunchDetailActivity extends AppCompatActivity {
         textView.setText(s);
     }
 
+    /**
+     * This method sets TapView effect on the share button
+     */
+    private void setTapViewShare() {
+        // TapTargetView Effect for the share button
+        TapTargetView.showFor(this,                 // `this` is an Activity
+                TapTarget.forView(findViewById(R.id.fab_share), "Share", "Tell your friends about this launch.")
+                        // All options below are optional
+                        .outerCircleColor(R.color.secondaryLightColor)      // Specify a color for the outer circle
+                        .outerCircleAlpha(0.96f)                            // Specify the alpha amount for the outer circle
+                        .targetCircleColor(R.color.md_white_1000)           // Specify a color for the target circle
+                        .titleTextSize(24)                                  // Specify the size (in sp) of the title text
+                        .titleTextColor(R.color.md_white_1000)              // Specify the color of the title text
+                        .descriptionTextSize(12)                            // Specify the size (in sp) of the description text
+                        .descriptionTextColor(R.color.md_white_1000)        // Specify the color of the description text
+                        .textColor(R.color.md_white_1000)                   // Specify a color for both the title and description text
+                        .textTypeface(Typeface.SANS_SERIF)                  // Specify a typeface for the text
+                        .dimColor(R.color.md_black_1000)                    // If set, will dim behind the view with 30% opacity of the given color
+                        .drawShadow(true)                                   // Whether to draw a drop shadow or not
+                        .cancelable(true)                                  // Whether tapping outside the outer circle dismisses the view
+                        .tintTarget(true)                                   // Whether to tint the target view's color
+                        .transparentTarget(false)                           // Specify whether the target is transparent (displays the content underneath)
+                        .icon(getApplicationContext().getResources().getDrawable(R.drawable.ic_share))                     // Specify a custom drawable to draw as the target
+                        .targetRadius(60),                                  // Specify the target radius (in dp)
+                new TapTargetView.Listener() {                              // The listener can listen for regular clicks, long clicks or cancels
+                    @Override
+                    public void onTargetClick(TapTargetView view) {
+                        super.onTargetClick(view);      // This call is optional
+
+                        // Share based on the launch information
+                        Intent shareIntent = new Intent();
+                        shareIntent.setAction(Intent.ACTION_SEND);
+                        shareIntent.putExtra(Intent.EXTRA_TEXT, String.format("Catch the launch of the %s by %s on %s",
+                                getIntent().getStringExtra(LAUNCH_TITLE_EXTRA),
+                                getIntent().getStringExtra(AGENCY_NAME_EXTRA),
+                                getIntent().getStringExtra(LAUNCH_DATE_EXTRA)));
+                        shareIntent.setType("text/plain");
+                        startActivity(shareIntent);
+                    }
+                });
+    }
+
+    /**
+     * This method sets TapView effect to the watch button
+     */
+    private void setTapViewWatch() {
+        // TapTargetView Effect for the share button
+        TapTargetView.showFor(this,                 // `this` is an Activity
+                TapTarget.forView(findViewById(R.id.fab_watch), "Watch Launch Live", "You will be redirected to a live stream if we found one.")
+                        // All options below are optional
+                        .outerCircleColor(R.color.secondaryLightColor)      // Specify a color for the outer circle
+                        .outerCircleAlpha(0.96f)                            // Specify the alpha amount for the outer circle
+                        .targetCircleColor(R.color.md_white_1000)           // Specify a color for the target circle
+                        .titleTextSize(24)                                  // Specify the size (in sp) of the title text
+                        .titleTextColor(R.color.md_white_1000)              // Specify the color of the title text
+                        .descriptionTextSize(12)                            // Specify the size (in sp) of the description text
+                        .descriptionTextColor(R.color.md_white_1000)        // Specify the color of the description text
+                        .textColor(R.color.md_white_1000)                   // Specify a color for both the title and description text
+                        .textTypeface(Typeface.SANS_SERIF)                  // Specify a typeface for the text
+                        .dimColor(R.color.md_black_1000)                    // If set, will dim behind the view with 30% opacity of the given color
+                        .drawShadow(true)                                   // Whether to draw a drop shadow or not
+                        .cancelable(true)                                  // Whether tapping outside the outer circle dismisses the view
+                        .tintTarget(true)                                   // Whether to tint the target view's color
+                        .transparentTarget(false)                           // Specify whether the target is transparent (displays the content underneath)
+                        .icon(getApplicationContext().getResources().getDrawable(R.drawable.ic_notification_rocket))                     // Specify a custom drawable to draw as the target
+                        .targetRadius(60),                                  // Specify the target radius (in dp)
+                new TapTargetView.Listener() {                              // The listener can listen for regular clicks, long clicks or cancels
+                    @Override
+                    public void onTargetClick(TapTargetView view) {
+                        super.onTargetClick(view);      // This call is optional
+
+                        // Watch launch sequences
+                        // Get Url from extra
+                        String url = getIntent().getStringExtra(LAUNCH_VID_URL_EXTRA);
+
+                        // If url string is empty then show Toast that says no stream available
+                        if (!url.equals("empty")) {
+                            // Set Intent to redirect to link
+                            Intent watchIntent = new Intent(Intent.ACTION_VIEW);
+                            watchIntent.setData(Uri.parse(url));
+                            startActivity(watchIntent);
+                        } else {
+                            Toast.makeText(LaunchDetailActivity.this, "No live stream found for the launch", Toast.LENGTH_SHORT).show();
+                        }
+
+                    }
+                });
+    }
 
 
 }

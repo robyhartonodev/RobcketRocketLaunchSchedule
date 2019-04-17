@@ -69,7 +69,7 @@
                     android:gravity="center"
                     android:text="Window Value" />
 
-                <Button
+<!--                <Button
                     android:id="@+id/button_watch"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -91,7 +91,7 @@
                     android:drawableStart="@drawable/ic_share"
                     android:drawablePadding="8dp"
                     android:text="Share"
-                    android:textColor="@color/material_drawer_dark_primary_text" />
+                    android:textColor="@color/material_drawer_dark_primary_text" />-->
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>

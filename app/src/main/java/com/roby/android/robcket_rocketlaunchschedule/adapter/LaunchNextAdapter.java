@@ -8,8 +8,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+
+import com.blogspot.atifsoftwares.animatoolib.Animatoo;
 import com.roby.android.robcket_rocketlaunchschedule.R;
 import com.roby.android.robcket_rocketlaunchschedule.activity.LaunchDetailActivity;
+import com.roby.android.robcket_rocketlaunchschedule.activity.MainActivity;
 import com.roby.android.robcket_rocketlaunchschedule.model.Launch;
 import com.roby.android.robcket_rocketlaunchschedule.model.Mission;
 import com.squareup.picasso.Picasso;
@@ -96,6 +99,9 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
         // Set the launch location text
         launchNextViewHolder.txtLaunchLocation.setText(launchList.get(position).getLocation().getName());
 
+        // Set the launch agency text
+        launchNextViewHolder.txtLaunchAgency.setText(launchList.get(position).getLsp().getName());
+
     }
 
     @Override
@@ -110,6 +116,7 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
         ImageView ivLaunchImage;
         TextView txtLaunchDate;
         TextView txtLaunchLocation;
+        TextView txtLaunchAgency;
 
         public LaunchNextViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -118,6 +125,7 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
             ivLaunchImage = itemView.findViewById(R.id.launch_rocket_image_view);
             txtLaunchDate = itemView.findViewById(R.id.txt_launch_date);
             txtLaunchLocation = itemView.findViewById(R.id.txt_launch_location);
+            txtLaunchAgency = itemView.findViewById(R.id.txt_launch_agency);
 
             // Set the OnClickListener to entire view
             itemView.setOnClickListener(this);
@@ -189,7 +197,11 @@ public class LaunchNextAdapter extends RecyclerView.Adapter<LaunchNextAdapter.La
             detailLaunchIntent.putExtra(AGENCY_WIKI_URL_EXTRA, currentAgencyUrl);
             detailLaunchIntent.putExtra(LAUNCH_VID_URL_EXTRA, currentLaunchVidsUrls);
 
+            // Start Activity
             mContext.startActivity(detailLaunchIntent);
+
+            // Animation Transition
+            Animatoo.animateZoom(mContext);
         }
     }
 
